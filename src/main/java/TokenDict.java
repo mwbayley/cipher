@@ -8,9 +8,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Map;
 
-public class TokenDict implements CipherDict<Object> {
+public class TokenDict implements CipherDict {
 
-  private HashMap<Object, List<Character[]>> index;
+  private HashMap<Object, List<String>> index;
   private int size;
 
   public TokenDict(String dictPath) throws IOException {
@@ -18,16 +18,8 @@ public class TokenDict implements CipherDict<Object> {
     // read in the dictionary to a hash map with multiple keys
     try(BufferedReader br = new BufferedReader(new FileReader(dictPath))) {
       String word;
-      Character[] wordChars;
-      int wordLength;
-
       while ((word = br.readLine()) != null) {
-        wordLength = word.length();
-        wordChars = new Character[wordLength];
-        for (int i=0; i<wordLength; i++) {
-          wordChars[i] = word.charAt(i);
-        }
-        this.add(CipherDictKey(word), wordChars);
+        this.add(CipherDictKey(word), word);
         size++;
       }
     }
@@ -36,7 +28,7 @@ public class TokenDict implements CipherDict<Object> {
 
   public void printStats() {
     int maxSize = 0;
-    for (Map.Entry<Object, List<Character[]>> results  : index.entrySet()) {
+    for (Map.Entry<Object, List<String>> results  : index.entrySet()) {
       int size = results.getValue().size();
       if (size > maxSize) {
         maxSize = size;
@@ -49,19 +41,19 @@ public class TokenDict implements CipherDict<Object> {
     return size;
   }
 
-  // get the list that matches the key, add the wordChars to it, and write it back
-  private void add (Object key, Character[] wordChars) {
-    List<Character[]> resultList = index.get(key);
+  // get the list that matches the key, add the word to it, and write it back
+  private void add (Object key, String word) {
+    List<String> resultList = index.get(key);
     if (resultList == null) {
       resultList = new LinkedList<>();
       index.put(key, resultList);
     }
-    resultList.add(wordChars);
+    resultList.add(word);
   }
 
-  // should this be an iterator?
-  public List<Character[]> getAll (Object key) {
-    return index.get(key);
+  // should this be an iterator instead?
+  public List<String> getAll (Cipher cipher, String scrambledWord) {
+    return index.get(CipherDictKey(scrambledWord));
   }
 
   private void clear() {

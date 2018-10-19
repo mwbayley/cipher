@@ -1,6 +1,6 @@
 import java.util.List;
 
-public interface CipherDict<LookupType> {
+public interface CipherDict {
 
   /**
    * Print info about the dictionary to stdout
@@ -13,7 +13,10 @@ public interface CipherDict<LookupType> {
   int size();
 
   // should this be an iterator?
-  List<Character[]> getAll(LookupType key);
+  // here we guarantee that all potential matches will be retrieved
+  // NO GUARANTEE that all of these match the cipher
+  // should be an efficient lookup here
+  List<String> getAll(Cipher cipher, String scrambledWord);
 
 
 }

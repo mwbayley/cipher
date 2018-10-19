@@ -14,16 +14,18 @@ public class Cipher {
     PARTIAL
   }
 
-  public Cipher() {
+  /* TODO: prepopulate identity mappings for punctuation */
+
+  Cipher() {
     this(cipherType.EMPTY);
   }
 
-  public Cipher(Cipher cipher) {
+  Cipher(Cipher cipher) {
     this.map = new HashMap<>(cipher.map);
     this.mappedTo = new HashSet<>(cipher.mappedTo);
   }
 
-  public Cipher(cipherType type) {
+  Cipher(cipherType type) {
     map = new HashMap<>();
     mappedTo = new HashSet<>();
     if (type == cipherType.EMPTY) {
@@ -40,33 +42,25 @@ public class Cipher {
     throw new UnsupportedOperationException();
   }
 
-  public void add(Character from, Character to) {
-    if (map.put(from, to).equals(null)) {
+  private void add(Character from, Character to) {
+    if (map.put(from, to) == null) {
       throw new RuntimeException("Character is already mapped in the cipher");
     }
   }
 
-  public void replace(Character from, Character to) {
-    if (!map.containsKey(from)) {
-      throw new RuntimeException("From Character isn't mapped yet");
-    }
-    if (mappedTo.contains(to)) {
-      throw new RuntimeException("To Character is already used");
-    }
-    mappedTo.remove(map.get(from));
-    map.put(from, to);
-    mappedTo.add(to);
-  }
-
   public String apply (String word) {
     StringBuilder builder = new StringBuilder();
-    for (char c : word.toCharArray()) {
-      builder.append(map.get(c));
+    for (char fromChar : word.toCharArray()) {
+      Character toChar = map.get(fromChar);
+      if (toChar == null) {
+        toChar = '?';
+      }
+      builder.append(toChar);
     }
     return builder.toString();
   }
 
-  public String apply (String[] words) {
+  public String solve (String[] words) {
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < words.length; i++) {
       if (i > 0) {
@@ -76,7 +70,7 @@ public class Cipher {
     }
     return builder.toString();
   }
-*/
+
   /**
    * return: the cipher implied if the dictionary match is the encoded word
    * or null if no match
