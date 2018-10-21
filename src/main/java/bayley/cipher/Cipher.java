@@ -16,8 +16,6 @@ public class Cipher {
     's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '\''
   );
 
-
-
   Cipher() {
     map = new HashMap<>();
     // prepopulate identity mapping for apostrophe;
@@ -42,7 +40,7 @@ public class Cipher {
       throw new RuntimeException(String.format("Character %c is already mapped from in the cipher", from));
     }
   }
-
+/*
   public String apply (String word) {
     StringBuilder builder = new StringBuilder();
     for (char fromChar : word.toCharArray()) {
@@ -53,15 +51,22 @@ public class Cipher {
       builder.append(toChar);
     }
     return builder.toString();
-  }
+  }*/
 
-  public String solve (String[] words) {
+  public String solve (String scrambled) {
     StringBuilder builder = new StringBuilder();
-    for (int i = 0; i < words.length; i++) {
-      if (i > 0) {
-        builder.append(" ");
+    for (char fromChar : scrambled.toCharArray()) {
+      Character toChar;
+      if (alphabet.contains(fromChar)) {
+        toChar = map.get(fromChar);
+        if (toChar == null) {
+          toChar = '?';
+        }
       }
-      builder.append(apply(words[i]));
+      else {
+        toChar = fromChar;
+      }
+      builder.append(toChar);
     }
     return builder.toString();
   }

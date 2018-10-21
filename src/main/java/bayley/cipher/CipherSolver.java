@@ -34,7 +34,7 @@ public class CipherSolver {
    */
   private List<Cipher> refine (Cipher cipher, String scrambledWord) {
     List<Cipher> results = new LinkedList<>();
-    String solvedWord = cipher.apply(scrambledWord);
+    String solvedWord = cipher.solve(scrambledWord);
     Object key = TokenDict.CipherDictKey(solvedWord);
     for (String matchingWord : dict.getAll(cipher, scrambledWord)) {
       // check wordChars against keyWord
@@ -47,14 +47,22 @@ public class CipherSolver {
   public List<String> solve (final String scrambled) {
     String[] scrambledWords = scrambled.split(" ");
     List<Cipher> candidateCiphers = new ArrayList<>();
-    // start with one candidate - an empty bayley.cipher.Cipher;
+    // start with one candidate - an empty Cipher
     candidateCiphers.add(new Cipher());
     // this will be the list of candidates for the next iteration
     List<Cipher> newCandidateCiphers = new ArrayList<>();
-    if (scrambledWords.length == 0) return null;
-    for (String word : scrambledWords) {
+    if (scrambledWords.length == 0) {
+      return null;
+    }
+    for (String scrambledWord : scrambledWords) {
+      String newString = scrambledWord.toLowerCase().replaceAll("[^a-z\']","");
+      // if this word was only punctuation just skip it
+      if (newString.equals("")) {
+        continue;
+      }
+      // new candidate ciphers are superciphers of old candidates that also match the new word
       for (Cipher cipher : candidateCiphers) {
-        newCandidateCiphers.addAll(refine(cipher, word));
+        newCandidateCiphers.addAll(refine(cipher, scrambledWord));
       }
       candidateCiphers = newCandidateCiphers;
     }
@@ -63,7 +71,7 @@ public class CipherSolver {
     }
     List<String> results = new LinkedList<>();
     for (Cipher solutionCipher : candidateCiphers) {
-      String result = solutionCipher.solve(scrambledWords);
+      String result = solutionCipher.solve(scrambled);
       results.add(result);
     }
     return results;
