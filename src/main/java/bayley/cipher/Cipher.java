@@ -1,29 +1,32 @@
 package bayley.cipher;
 
 import java.util.Map;
-import java.util.HashMap;
 import java.util.Set;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableSet;
 
 public class Cipher {
 
-  private Map<Character, Character> map;
+  private BiMap<Character, Character> map;
 
-  private final Set<Character> alphabet = ImmutableSet.of(
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
-    'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
-    's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '\''
+  public static final Set<Character> alphabet = ImmutableSet.of(
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+    'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+    'u', 'v', 'w', 'x', 'y', 'z', '\'', '-'
   );
 
   Cipher() {
-    map = new HashMap<>();
-    // prepopulate identity mapping for apostrophe;
+    map = HashBiMap.create(alphabet.size());
+    // prepopulate identity mappings for punctuation
     map.put('\'', '\'');
+    map.put('-', '-');
   }
 
+  // use this constructor to clone an existing Cipher (keys and values copied by reference)
   Cipher(Cipher cipher) {
-    map = new HashMap<>(cipher.map);
+    map = HashBiMap.create(cipher.map);
   }
 
   void add(Character from, Character to) {
@@ -93,6 +96,7 @@ public class Cipher {
     return newCipher;
   }
 
+  @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
     for (Map.Entry<Character, Character> entry : map.entrySet()) {

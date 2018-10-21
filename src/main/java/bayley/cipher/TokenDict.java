@@ -15,9 +15,13 @@ public class TokenDict implements CipherDict {
   private HashMap<Object, List<String>> index;
   private int size;
 
+  TokenDict() throws IOException {
+    this("/usr/share/dict/words");
+  }
+
   TokenDict(String dictPath) throws IOException {
-    this.clear();
-    // read in the dictionary to a hash map with multiple keys
+    this.index = new HashMap<>();
+    // read in the dictionary to a hash map with keys based on a tokenized representation of the word
     try(BufferedReader br = new BufferedReader(new FileReader(dictPath))) {
       String word;
       while ((word = br.readLine()) != null) {
@@ -43,7 +47,7 @@ public class TokenDict implements CipherDict {
     return size;
   }
 
-  // get the list that matches the key, add the word to it, and write it back
+  // get the list that matches the key, add the word to it
   private void add (Object key, String word) {
     List<String> resultList = index.get(key);
     if (resultList == null) {
@@ -53,16 +57,11 @@ public class TokenDict implements CipherDict {
     resultList.add(word);
   }
 
-  // should this be an iterator instead?
   public List<String> getAll (Cipher cipher, String scrambledWord) {
     return index.get(CipherDictKey(scrambledWord));
   }
 
-  private void clear() {
-    this.index = new HashMap<>();
-  }
-
-  public static Object CipherDictKey(String word) {
+  private static int CipherDictKey(String word) {
     if (word.length() == 0) {
       throw new RuntimeException("Can't tokenize a null or empty word");
     }
@@ -72,7 +71,19 @@ public class TokenDict implements CipherDict {
     Byte nChars = 0;
     // tokenize the characters in the string
     for (int i = 0; i < word.length(); i++) {
-      Byte prevToken = charToByte.putIfAbsent(word.charAt(i), nChars);
+      Character thisChar = Character.toLowerCase(word.charAt(i));
+      // we will hard-code mappings to negative values for punctuation (since it isn't scrambled)
+      // we reserve the token -1 for an apostrophe
+      if (thisChar.equals('\'')) {
+        tokenized[i] = -1;
+        continue;
+      }
+      // we reserve the token -2 for a hyphen
+      if (thisChar.equals('-')) {
+        tokenized[i] = -2;
+        continue;
+      }
+      Byte prevToken = charToByte.putIfAbsent(thisChar, nChars);
       tokenized[i] = (prevToken == null) ? nChars++ : prevToken;
     }
     // return a hashCode based on the array elements (and positions)
