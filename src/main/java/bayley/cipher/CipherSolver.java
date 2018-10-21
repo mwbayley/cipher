@@ -1,3 +1,5 @@
+package bayley.cipher;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
@@ -16,7 +18,7 @@ public class CipherSolver {
     
   }
 
-  // a CipherSolver uses a single dictionary to solve many ciphers
+  // a bayley.cipher.CipherSolver uses a single dictionary to solve many ciphers
   private CipherSolver (String dictPath) throws IOException {
 
     // read in the dictionary and create data structures for lookup
@@ -45,7 +47,7 @@ public class CipherSolver {
   public List<String> solve (final String scrambled) {
     String[] scrambledWords = scrambled.split(" ");
     List<Cipher> candidateCiphers = new ArrayList<>();
-    // start with one candidate - an empty Cipher;
+    // start with one candidate - an empty bayley.cipher.Cipher;
     candidateCiphers.add(new Cipher());
     // this will be the list of candidates for the next iteration
     List<Cipher> newCandidateCiphers = new ArrayList<>();

@@ -1,50 +1,45 @@
+package bayley.cipher;
+
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
-import java.util.HashSet;
+
+import com.google.common.collect.ImmutableSet;
 
 public class Cipher {
 
   private Map<Character, Character> map;
-  private Set<Character> mappedTo;
 
-  public enum cipherType {
-    EMPTY,
-    RANDOM,
-    PARTIAL
-  }
+  private final Set<Character> alphabet = ImmutableSet.of(
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
+    'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+    's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '\''
+  );
 
-  /* TODO: prepopulate identity mappings for punctuation */
+
 
   Cipher() {
-    this(cipherType.EMPTY);
+    map = new HashMap<>();
+    // prepopulate identity mapping for apostrophe;
+    map.put('\'', '\'');
   }
 
   Cipher(Cipher cipher) {
-    this.map = new HashMap<>(cipher.map);
-    this.mappedTo = new HashSet<>(cipher.mappedTo);
+    map = new HashMap<>(cipher.map);
   }
 
-  Cipher(cipherType type) {
-    map = new HashMap<>();
-    mappedTo = new HashSet<>();
-    if (type == cipherType.EMPTY) {
-      return;
+  void add(Character from, Character to) {
+    if (!alphabet.contains(from)) {
+      throw new RuntimeException(String.format("Character %c isn't in our alphabet", from));
     }
-    if (type == cipherType.RANDOM) {
-      // TODO
-      throw new UnsupportedOperationException("Not yet implemented");
+    if (!alphabet.contains(to)) {
+      throw new RuntimeException(String.format("Character %c isn't in our alphabet", to));
     }
-    if (type == cipherType.PARTIAL) {
-      // TODO
-      throw new UnsupportedOperationException("Not yet implemented");
+    if (map.containsValue(to)) {
+      throw new RuntimeException(String.format("Character %c is already mapped to in the cipher", to));
     }
-    throw new UnsupportedOperationException();
-  }
-
-  private void add(Character from, Character to) {
-    if (map.put(from, to) == null) {
-      throw new RuntimeException("Character is already mapped in the cipher");
+    if (map.put(from, to) != null) {
+      throw new RuntimeException(String.format("Character %c is already mapped from in the cipher", from));
     }
   }
 
@@ -93,4 +88,17 @@ public class Cipher {
     return newCipher;
   }
 
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    for (Map.Entry<Character, Character> entry : map.entrySet()) {
+      Character from = entry.getKey();
+      Character to = entry.getValue();
+      builder.append(String.format("%c:%c, ", from, to));
+    }
+    // remove the extra comma and space at the end
+    if (map.size() > 0) {
+      builder.delete(builder.length() - 2, builder.length());
+    }
+    return builder.toString();
+  }
 }

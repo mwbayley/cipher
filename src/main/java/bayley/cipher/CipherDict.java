@@ -1,3 +1,5 @@
+package bayley.cipher;
+
 import java.util.List;
 
 public interface CipherDict {

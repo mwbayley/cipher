@@ -1,3 +1,5 @@
+package bayley.cipher;
+
 import java.util.List;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -13,7 +15,7 @@ public class TokenDict implements CipherDict {
   private HashMap<Object, List<String>> index;
   private int size;
 
-  public TokenDict(String dictPath) throws IOException {
+  TokenDict(String dictPath) throws IOException {
     this.clear();
     // read in the dictionary to a hash map with multiple keys
     try(BufferedReader br = new BufferedReader(new FileReader(dictPath))) {
