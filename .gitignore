@@ -13,7 +13,5 @@
 # Maven
 target
 
-# Build
-out
-build
-bin
+# Vim
+*.sw*
