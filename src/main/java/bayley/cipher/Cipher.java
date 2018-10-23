@@ -1,67 +1,127 @@
 package bayley.cipher;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableSet;
 
 public class Cipher {
 
-  private BiMap<Character, Character> map;
+  /** We use Guava's HashBiMap so that we can both encode and decode ciphers efficiently
+   *  We also don't use the BiMap interface because other implementations don't guarantee iteration order
+   *  That would mean a bunch more sorting in each of our tests. Relying on HashBiMap avoids this.
+   */
+  private HashBiMap<Character, Character> map;
+  private Set<Character> alphabet;
 
-  public static final Set<Character> alphabet = ImmutableSet.of(
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-    'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-    'u', 'v', 'w', 'x', 'y', 'z', '\'', '-'
-  );
+  private static Set<Character> englishAlphabet = ImmutableSet.of(
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+        'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+        'U', 'V', 'W', 'X', 'Y', 'Z', '\'', '-'
+      );
 
+  private static Set<Character> englishKnownCharacters = ImmutableSet.of('\'', '-');
+
+  /**
+   * Constructor for default English alphabet
+   */
   Cipher() {
-    map = HashBiMap.create(alphabet.size());
-    // prepopulate identity mappings for punctuation
-    map.put('\'', '\'');
-    map.put('-', '-');
+    this(englishAlphabet, englishKnownCharacters
+    );
   }
 
-  // use this constructor to clone an existing Cipher (keys and values copied by reference)
-  Cipher(Cipher cipher) {
+  /**
+   * Use this constructor if you're using a non-English alphabet
+   * @param alphabet Set of characters to be mapped to and from by the Cipher
+   * @param knownCharacters Set of characters within words that aren't scrambled (like apostrophe or hyphen in English)
+   */
+  public Cipher(Set<Character> alphabet, Set<Character> knownCharacters) {
+    this.alphabet = new HashSet<>(alphabet);
+    this.alphabet.addAll(knownCharacters);
+    map = HashBiMap.create(this.alphabet.size());
+    // prepopulate identity mappings for intra-word punctuation or other non-scrambled characters
+    for (Character c : knownCharacters) {
+      map.put(c, c);
+    }
+  }
+
+  /**
+   * Use this constructor to clone an existing Cipher (keys and values copied by reference)
+    */
+  public Cipher(Cipher cipher) {
     map = HashBiMap.create(cipher.map);
+    alphabet = cipher.alphabet;
   }
 
+  /**
+   * Add a mapping from one character to another to the cipher
+   */
   void add(Character from, Character to) {
     if (!alphabet.contains(from)) {
-      throw new RuntimeException(String.format("Character %c isn't in our alphabet", from));
+      throw new IllegalArgumentException(String.format("Character %c isn't in our alphabet", from));
     }
     if (!alphabet.contains(to)) {
-      throw new RuntimeException(String.format("Character %c isn't in our alphabet", to));
+      throw new IllegalArgumentException(String.format("Character %c isn't in our alphabet", to));
     }
-    if (map.containsValue(to)) {
-      throw new RuntimeException(String.format("Character %c is already mapped to in the cipher", to));
+    boolean alreadyMappedFrom = false;
+    try {
+      if (map.put(from, to) != null) {
+        alreadyMappedFrom = true;
+      }
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(String.format("Character %c is already mapped to in the cipher", to));
     }
-    if (map.put(from, to) != null) {
-      throw new RuntimeException(String.format("Character %c is already mapped from in the cipher", from));
+    if (alreadyMappedFrom) {
+      throw new IllegalArgumentException(String.format("Character %c is already mapped from in the cipher", from));
     }
   }
-/*
-  public String apply (String word) {
-    StringBuilder builder = new StringBuilder();
-    for (char fromChar : word.toCharArray()) {
-      Character toChar = map.get(fromChar);
-      if (toChar == null) {
-        toChar = '?';
-      }
-      builder.append(toChar);
-    }
-    return builder.toString();
-  }*/
 
-  public String solve (String scrambled) {
+  /**
+   * Create a new English language Cipher with a random completely populated mapping
+   * @return the new Cipher
+   */
+  public static Cipher randomCipher() {
+    return randomCipher(englishAlphabet, englishKnownCharacters);
+  }
+
+  /**
+   * Create a new Cipher with a random completely populated mapping
+   * @return the new Cipher
+   */
+  public static Cipher randomCipher(Set<Character> alphabet, Set<Character> knownCharacters) {
+    Cipher c = new Cipher(alphabet, knownCharacters);
+    LinkedList<Character> mapFromChars = new LinkedList<>(c.alphabet);
+    mapFromChars.removeAll(knownCharacters);
+    LinkedList<Character> mapToChars = new LinkedList<>(mapFromChars);
+    Collections.shuffle(mapToChars);
+    while (!mapFromChars.isEmpty() && !mapToChars.isEmpty()) {
+      c.add(mapFromChars.pop(), mapToChars.pop());
+    }
+    return c;
+  }
+
+  public String decode (String scrambled) {
+    return apply(scrambled, false);
+  }
+
+  public String encode (String unscrambled) {
+    return apply(unscrambled, true);
+  }
+
+  public String apply (String scrambled, final boolean inverse) {
     StringBuilder builder = new StringBuilder();
-    for (char fromChar : scrambled.toCharArray()) {
+    for (char fromChar : scrambled.toUpperCase().toCharArray()) {
       Character toChar;
       if (alphabet.contains(fromChar)) {
-        toChar = map.get(fromChar);
+        if (inverse) {
+          toChar = map.inverse().get(fromChar);
+        } else {
+          toChar = map.get(fromChar);
+        }
         if (toChar == null) {
           toChar = '?';
         }
@@ -75,8 +135,8 @@ public class Cipher {
   }
 
   /**
-   * return: the cipher implied if the dictionary match is the encoded word
-   * or null if no match
+   * return: the supercipher implied if the dictionary word is the encoded word
+   * or null if the dictionary word doesn't match the scrambled word with the current cipher
    */
   public Cipher match(String scrambledWord, String dictWord) {
     if (scrambledWord.length() != dictWord.length()) {
@@ -99,6 +159,7 @@ public class Cipher {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
+
     for (Map.Entry<Character, Character> entry : map.entrySet()) {
       Character from = entry.getKey();
       Character to = entry.getValue();

@@ -1,5 +1,6 @@
 package bayley.cipher;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -9,6 +10,8 @@ import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 public class TokenDict implements CipherDict {
 
@@ -25,7 +28,7 @@ public class TokenDict implements CipherDict {
     try(BufferedReader br = new BufferedReader(new FileReader(dictPath))) {
       String word;
       while ((word = br.readLine()) != null) {
-        this.add(CipherDictKey(word), word);
+        this.add(CipherDictKey(word), word.toUpperCase());
         size++;
       }
     }
@@ -90,4 +93,23 @@ public class TokenDict implements CipherDict {
     return Arrays.hashCode(tokenized);
   }
 
+  public String randomWord() {
+    Collection<List<String>> dictLists = index.values();
+    int num = (int) (Math.random() * dictLists.size());
+    List<String> randomList = null;
+    for (List<String> list: dictLists) {
+      if (--num < 0) {
+        randomList = list;
+        break;
+      }
+    }
+    if (randomList == null) {
+      throw new RuntimeException("Can't find a random word");
+    }
+    num = (int) (Math.random() * randomList.size());
+    for (String randomWord: randomList) {
+      if (--num < 0) return randomWord;
+    }
+    throw new RuntimeException("Can't find a random word");
+  }
 }

@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.Random;
 
 public class ListDict implements CipherDict {
 
@@ -22,7 +23,7 @@ public class ListDict implements CipherDict {
     try(BufferedReader br = new BufferedReader(new FileReader(dictPath))) {
       String word;
       while ((word = br.readLine()) != null) {
-        dictList.add(word);
+        dictList.add(word.toUpperCase());
         size++;
       }
     }
@@ -30,7 +31,7 @@ public class ListDict implements CipherDict {
   }
 
   public void printStats() {
-    System.out.println(String.format("ListDict has %n words", size));
+    System.out.println(String.format("ListDict has %d words", size));
   }
 
   public int size() {
@@ -41,4 +42,8 @@ public class ListDict implements CipherDict {
     return dictList;
   }
 
+  public String randomWord() {
+    int i = new Random().nextInt(size + 1);
+    return dictList.get(i);
+  }
 }

@@ -1,69 +1,76 @@
 package bayley.cipher;
 
-import java.util.Collections;
-import java.util.LinkedList;
+import java.io.IOException;
 
 import org.junit.Test;
 import org.junit.Assert;
 
+import static bayley.cipher.Cipher.randomCipher;
+
 
 public class TestCipher {
 
-  public Cipher randomCipher() {
-    Cipher c = new Cipher();
-    LinkedList<Character> mapFromChars = new LinkedList<>(Cipher.alphabet);
-    mapFromChars.remove('\'');
-    mapFromChars.remove('-');
-    LinkedList<Character> mapToChars = new LinkedList<>(mapFromChars);
-    Collections.shuffle(mapToChars);
-    while (!mapFromChars.isEmpty() && !mapToChars.isEmpty()) {
-      c.add(mapFromChars.pop(), mapToChars.pop());
-    }
-    return c;
-  }
 
   @Test
   public void testSimpleCipher() {
     Cipher c = new Cipher();
-    c.add('a', 'f');
-    c.add('b', 'g');
-    c.add('c', 'h');
+    c.add('A', 'F');
+    c.add('B', 'G');
+    c.add('C', 'H');
     String cipherString = c.toString();
-    String expectedString = "a:f, b:g, c:h, ':'";
-    Assert.assertEquals(cipherString, expectedString);
-    Assert.assertEquals(c.solve("abc"), "fgh");
+    String expectedString = "':', -:-, A:F, B:G, C:H";
+    Assert.assertEquals(expectedString, cipherString);
+    Assert.assertEquals("FGH", c.decode("ABC"));
+  }
+
+  @Test
+  public void testRandomCipher() throws IOException {
+    Cipher c = randomCipher();
+    CipherDict dict = new ListDict();
+    String sentence = dict.randomSentence(10);
+    System.out.println(sentence);
+    String scrambled = c.encode(sentence);
+    System.out.println(scrambled);
+    String unscrambled = c.decode(scrambled);
+    System.out.println(unscrambled);
+    Assert.assertEquals(sentence, unscrambled);
   }
 
   @Test
   public void testFromCollision() {
     Cipher c = new Cipher();
-    c.add('a', 'b');
+    c.add('A', 'B');
     boolean collisionCaught = false;
     String exceptionMsg = "";
     try {
-      c.add('a', 'c');
+      c.add('A', 'C');
     } catch (RuntimeException e) {
       collisionCaught = true;
       exceptionMsg = e.getMessage();
     }
     Assert.assertTrue(collisionCaught);
-    Assert.assertEquals(exceptionMsg, "Character a is already mapped from in the cipher");
+    Assert.assertEquals("Character A is already mapped from in the cipher", exceptionMsg);
   }
 
   @Test
   public void testToCollision() {
     Cipher c = new Cipher();
-    c.add('a', 'b');
+    c.add('A', 'B');
     boolean collisionCaught = false;
     String exceptionMsg = "";
     try {
-      c.add('c', 'b');
+      c.add('C', 'B');
     } catch (RuntimeException e) {
       collisionCaught = true;
       exceptionMsg = e.getMessage();
     }
     Assert.assertTrue(collisionCaught);
-    Assert.assertEquals(exceptionMsg, "Character b is already mapped to in the cipher");
+    Assert.assertEquals("Character B is already mapped to in the cipher", exceptionMsg);
+  }
+
+  @Test
+  public void testCipherCloning() {
+
   }
 
 }

@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public class CipherSolver {
 
-  private CipherDict dict;
+  public CipherDict dict;
 
   public static void main (String[] args) {
     try {
@@ -18,13 +18,21 @@ public class CipherSolver {
     
   }
 
-  // a bayley.cipher.CipherSolver uses a single dictionary to solve many ciphers
-  private CipherSolver (String dictPath) throws IOException {
+  public CipherSolver () throws IOException {
+    // read in the dictionary and create data structures for lookup
+    dict = new TokenDict();
+    System.out.printf("Dictionary has %s words%n", dict.size());
+  }
 
+  /**  a CipherSolver uses a single dictionary to solve many ciphers
+   *
+   * @param dictPath local path to newline delimited dictionary
+   * @throws IOException
+   */
+  public CipherSolver (String dictPath) throws IOException {
     // read in the dictionary and create data structures for lookup
     dict = new TokenDict(dictPath);
     System.out.printf("Dictionary has %s words%n", dict.size());
-
   }
 
   /**
@@ -34,8 +42,7 @@ public class CipherSolver {
    */
   private List<Cipher> refine (Cipher cipher, String scrambledWord) {
     List<Cipher> results = new LinkedList<>();
-    String solvedWord = cipher.solve(scrambledWord);
-    Object key = TokenDict.CipherDictKey(solvedWord);
+    String solvedWord = cipher.decode(scrambledWord);
     for (String matchingWord : dict.getAll(cipher, scrambledWord)) {
       // check wordChars against keyWord
       Cipher supercipher = cipher.match(scrambledWord, matchingWord);
@@ -71,7 +78,7 @@ public class CipherSolver {
     }
     List<String> results = new LinkedList<>();
     for (Cipher solutionCipher : candidateCiphers) {
-      String result = solutionCipher.solve(scrambled);
+      String result = solutionCipher.decode(scrambled);
       results.add(result);
     }
     return results;
