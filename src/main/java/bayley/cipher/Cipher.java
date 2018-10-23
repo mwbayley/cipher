@@ -36,8 +36,8 @@ public class Cipher {
 
   /**
    * Use this constructor if you're using a non-English alphabet
-   * @param alphabet Set of characters to be mapped to and from by the Cipher
-   * @param knownCharacters Set of characters within words that aren't scrambled (like apostrophe or hyphen in English)
+   * @param alphabet Set of characters to be mapped by the Cipher
+   * @param knownCharacters Set of characters within words that aren't scrambled (like apostrophe and hyphen in English)
    */
   public Cipher(Set<Character> alphabet, Set<Character> knownCharacters) {
     this.alphabet = new HashSet<>(alphabet);
@@ -67,15 +67,19 @@ public class Cipher {
     if (!alphabet.contains(to)) {
       throw new IllegalArgumentException(String.format("Character %c isn't in our alphabet", to));
     }
-    boolean alreadyMappedFrom = false;
+    boolean conflictingMappingFrom = false;
     try {
-      if (map.put(from, to) != null) {
-        alreadyMappedFrom = true;
+      Character prevVal = map.put(from, to);
+      if (prevVal != null && prevVal != to) {
+        conflictingMappingFrom = true;
       }
-    } catch (IllegalArgumentException e) {
+    }
+    // This exception occurs when the value is already present in the HashBiMap
+    // we will catch it and throw our own so the message is clearer in this context
+    catch (IllegalArgumentException e) {
       throw new IllegalArgumentException(String.format("Character %c is already mapped to in the cipher", to));
     }
-    if (alreadyMappedFrom) {
+    if (conflictingMappingFrom) {
       throw new IllegalArgumentException(String.format("Character %c is already mapped from in the cipher", from));
     }
   }
@@ -148,9 +152,10 @@ public class Cipher {
       Character to = dictWord.charAt(i);
       Character previousTo = map.get(from);
       // if the character was already mapped and not mapped to the same char;
-      if (previousTo != null && !previousTo.equals(to)) {
+      if ( (previousTo != null && !previousTo.equals(to)) || map.containsValue(to)) {
         return null;
       }
+      System.out.println(String.format("Mapping %c to %c", from, to));
       newCipher.add(from, to);
     }
     return newCipher;
@@ -170,5 +175,15 @@ public class Cipher {
       builder.delete(builder.length() - 2, builder.length());
     }
     return builder.toString();
+  }
+
+  /**
+   * @return whether this is a supercipher of another cipher
+   */
+  public boolean isSuperCipher(Cipher otherCipher) {
+    if (!alphabet.equals(otherCipher.alphabet)) {
+      return false;
+    }
+    return map.entrySet().containsAll(otherCipher.map.entrySet());
   }
 }

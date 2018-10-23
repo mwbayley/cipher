@@ -18,7 +18,11 @@ public class TestCipherSolver {
     System.out.println(sentence);
     String scrambled = c.encode(sentence);
     System.out.println(scrambled);
-    List<String> unscrambled = solver.solve(scrambled);
+    List<String> solutions = solver.solve(scrambled);
+    for (String solution : solutions) {
+      System.out.println(solution);
+    }
+    Assert.assertTrue(solutions.contains(sentence));
   }
 
 

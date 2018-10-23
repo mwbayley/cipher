@@ -24,10 +24,10 @@ public class CipherSolver {
     System.out.printf("Dictionary has %s words%n", dict.size());
   }
 
-  /**  a CipherSolver uses a single dictionary to solve many ciphers
-   *
+  /**
+   * a CipherSolver uses a single dictionary to solve many ciphers
    * @param dictPath local path to newline delimited dictionary
-   * @throws IOException
+   * @throws IOException if the dict doesn't exist or can't be read
    */
   public CipherSolver (String dictPath) throws IOException {
     // read in the dictionary and create data structures for lookup
@@ -62,7 +62,7 @@ public class CipherSolver {
       return null;
     }
     for (String scrambledWord : scrambledWords) {
-      String newString = scrambledWord.toLowerCase().replaceAll("[^a-z\']","");
+      String newString = scrambledWord.toUpperCase().replaceAll("[^A-Z\']","");
       // if this word was only punctuation just skip it
       if (newString.equals("")) {
         continue;
