@@ -46,32 +46,35 @@ public class CipherSolver {
     for (String matchingWord : dict.getAll(cipher, scrambledWord)) {
       // check wordChars against keyWord
       Cipher supercipher = cipher.match(scrambledWord, matchingWord);
-      results.add(supercipher);
+      if (supercipher != null) {
+        results.add(supercipher);
+      }
     }
     return results;
   }
 
   public List<String> solve (final String scrambled) {
     String[] scrambledWords = scrambled.split(" ");
-    List<Cipher> candidateCiphers = new ArrayList<>();
+    List<Cipher> candidateCiphers = new LinkedList<>();
     // start with one candidate - an empty Cipher
     candidateCiphers.add(new Cipher());
     // this will be the list of candidates for the next iteration
-    List<Cipher> newCandidateCiphers = new ArrayList<>();
-    if (scrambledWords.length == 0) {
-      return null;
-    }
+    List<Cipher> newCandidateCiphers = new LinkedList<>();
+    int wordCount = 1;
     for (String scrambledWord : scrambledWords) {
+      System.out.println(wordCount);
       String newString = scrambledWord.toUpperCase().replaceAll("[^A-Z\']","");
       // if this word was only punctuation just skip it
       if (newString.equals("")) {
         continue;
       }
       // new candidate ciphers are superciphers of old candidates that also match the new word
+      System.out.println(String.format("%d candidate ciphers", candidateCiphers.size()));
       for (Cipher cipher : candidateCiphers) {
         newCandidateCiphers.addAll(refine(cipher, scrambledWord));
       }
       candidateCiphers = newCandidateCiphers;
+      wordCount++;
     }
     if (candidateCiphers.isEmpty()) {
       return null;

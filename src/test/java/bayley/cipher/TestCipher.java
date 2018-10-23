@@ -70,7 +70,11 @@ public class TestCipher {
 
   @Test
   public void testCipherCloning() {
-
+    Cipher c1 = randomCipher();
+    Cipher c2 = new Cipher(c1);
+    Assert.assertTrue(c1 != c2);
+    Assert.assertTrue(c1.isSuperCipher(c2));
+    Assert.assertTrue(c2.isSuperCipher(c1));
   }
 
 }

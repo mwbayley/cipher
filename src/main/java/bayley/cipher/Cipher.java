@@ -155,7 +155,12 @@ public class Cipher {
       if ( (previousTo != null && !previousTo.equals(to)) || map.containsValue(to)) {
         return null;
       }
-      System.out.println(String.format("Mapping %c to %c", from, to));
+      System.out.println(
+              String.format("Cipher %s: mapping %c to %c",
+                    System.identityHashCode(this) ,
+                    from,
+                    to
+              ));
       newCipher.add(from, to);
     }
     return newCipher;
