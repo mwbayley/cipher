@@ -1,7 +1,7 @@
 package bayley.cipher;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
@@ -20,7 +20,7 @@ public class TestCipherSolver {
     CipherSolver solver = new CipherSolver();
     Cipher emptyCipher = new Cipher();
     Set<Cipher> ciphers = solver.refine(emptyCipher, scrambled);
-    Set<String> solutions = new HashSet<>();
+    Set<String> solutions = new LinkedHashSet<>();
     for (Cipher c : ciphers) {
       solutions.add(c.decode(scrambled));
     }
@@ -39,14 +39,9 @@ public class TestCipherSolver {
   public void testSimpleCipherSolver() throws IOException {
     Cipher c = randomCipher();
     CipherSolver solver = new CipherSolver();
-    String sentence = solver.dict.randomSentence(20);
-    System.out.println(sentence);
+    String sentence = solver.dict.randomSentence(10);
     String scrambled = c.encode(sentence);
-    System.out.println(scrambled);
     Set<String> solutions = solver.solve(scrambled);
-    for (String solution : solutions) {
-      System.out.println(solution);
-    }
     Assert.assertTrue(solutions.contains(sentence));
   }
 

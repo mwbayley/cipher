@@ -23,15 +23,16 @@ public class ListDict implements CipherDict {
     try(BufferedReader br = new BufferedReader(new FileReader(dictPath))) {
       String word;
       while ((word = br.readLine()) != null) {
+
         dictList.add(word.toUpperCase());
         size++;
       }
     }
-    printStats();
+    System.out.println(stats());
   }
 
-  public void printStats() {
-    System.out.println(String.format("ListDict has %d words", size));
+  public String stats() {
+    return String.format("ListDict has %d words", size);
   }
 
   public int size() {

@@ -7,7 +7,7 @@ public interface CipherDict {
   /**
    * Print info about the dictionary to stdout
    */
-  void printStats();
+  String stats();
 
   /**
    * @return the number of words in the dictionary

@@ -27,11 +27,8 @@ public class TestCipher {
     Cipher c = randomCipher();
     CipherDict dict = new ListDict();
     String sentence = dict.randomSentence(10);
-    System.out.println(sentence);
     String scrambled = c.encode(sentence);
-    System.out.println(scrambled);
     String unscrambled = c.decode(scrambled);
-    System.out.println(unscrambled);
     Assert.assertEquals(sentence, unscrambled);
   }
 

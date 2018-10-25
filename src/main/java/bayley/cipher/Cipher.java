@@ -3,7 +3,6 @@ package bayley.cipher;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.HashBiMap;
@@ -13,7 +12,7 @@ public class Cipher {
 
   /** We use Guava's HashBiMap so that we can both encode and decode ciphers efficiently
    *  We also don't use the BiMap interface because other implementations don't guarantee iteration order
-   *  That would mean a bunch more sorting in each of our tests. Relying on HashBiMap avoids this.
+   *  That would mean a bunch more sorting in many of our tests. Relying on HashBiMap avoids this.
    */
   protected HashBiMap<Character, Character> map;
   private final Set<Character> alphabet;
@@ -161,6 +160,7 @@ public class Cipher {
    * return: the supercipher implied if the dictionary word is the encoded word
    * or null if the dictionary word doesn't match the scrambled word with the current cipher
    */
+  @Nullable
   public Cipher match(String scrambledWord, String dictWord) {
     if (scrambledWord.length() != dictWord.length()) {
       return null;
@@ -172,21 +172,13 @@ public class Cipher {
       // is there a conflicting map from this character already?
       if (c.map.containsKey(from) && c.map.get(from) != to) {
         // no match
-        System.out.println(String.format("from conflict: %s=%s conflicts with %s=%s", from, to, from, c.map.get(from)));
         return null;
       }
       // is there a conflicting map to this character already?
       if (c.map.inverse().containsKey(to) && c.map.inverse().get(to) != from) {
         // no match
-        System.out.println(String.format("to conflict: %s=%s conflicts with %s=%s", from, to, c.map.inverse().get(to), to));
         return null;
       }
-      /*System.out.println(
-              String.format("Cipher %s: mapping %c to %c",
-                    System.identityHashCode(this) ,
-                    from,
-                    to
-              ));*/
       c.add(from, to);
     }
     return c;
@@ -201,7 +193,7 @@ public class Cipher {
   /**
    * @return whether this is a supercipher of another cipher
    */
-  protected boolean isSuperCipher(Cipher otherCipher) {
+  public boolean isSuperCipher(Cipher otherCipher) {
     if (!alphabet.equals(otherCipher.alphabet)) {
       return false;
     }

@@ -10,8 +10,6 @@ import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Random;
-import java.util.Set;
 
 public class TokenDict implements CipherDict {
 
@@ -32,10 +30,10 @@ public class TokenDict implements CipherDict {
         size++;
       }
     }
-    printStats();
+    System.out.println(stats());
   }
 
-  public void printStats() {
+  public String stats() {
     int maxSize = 0;
     for (Map.Entry<Object, List<String>> results  : index.entrySet()) {
       int size = results.getValue().size();
@@ -43,7 +41,7 @@ public class TokenDict implements CipherDict {
         maxSize = size;
       }
     }
-    System.out.printf("Maximum key matches = %d%n", maxSize);
+    return String.format("Size = %d, maximum key matches = %d", this.size, maxSize);
   }
 
   public int size() {
