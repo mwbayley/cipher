@@ -15,7 +15,7 @@ public class Cipher {
    *  We also don't use the BiMap interface because other implementations don't guarantee iteration order
    *  That would mean a bunch more sorting in each of our tests. Relying on HashBiMap avoids this.
    */
-  private HashBiMap<Character, Character> map;
+  protected HashBiMap<Character, Character> map;
   private final Set<Character> alphabet;
   /*private final String alphabetRegex;*/
 
@@ -165,46 +165,43 @@ public class Cipher {
     if (scrambledWord.length() != dictWord.length()) {
       return null;
     }
-    Cipher newCipher = new Cipher(this);
+    Cipher c = new Cipher(this);
     for (int i = 0; i < scrambledWord.length(); i++) {
       Character from = scrambledWord.charAt(i);
       Character to = dictWord.charAt(i);
-      Character previousTo = map.get(from);
-      // if the character was already mapped and not mapped to the same char;
-      if ( (previousTo != null && !previousTo.equals(to)) || map.containsValue(to)) {
+      // is there a conflicting map from this character already?
+      if (c.map.containsKey(from) && c.map.get(from) != to) {
+        // no match
+        System.out.println(String.format("from conflict: %s=%s conflicts with %s=%s", from, to, from, c.map.get(from)));
         return null;
       }
-      System.out.println(
+      // is there a conflicting map to this character already?
+      if (c.map.inverse().containsKey(to) && c.map.inverse().get(to) != from) {
+        // no match
+        System.out.println(String.format("to conflict: %s=%s conflicts with %s=%s", from, to, c.map.inverse().get(to), to));
+        return null;
+      }
+      /*System.out.println(
               String.format("Cipher %s: mapping %c to %c",
                     System.identityHashCode(this) ,
                     from,
                     to
-              ));
-      newCipher.add(from, to);
+              ));*/
+      c.add(from, to);
     }
-    return newCipher;
+    return c;
   }
 
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append(String.format("Cipher %s: ", System.identityHashCode(this)));
-    for (Map.Entry<Character, Character> entry : map.entrySet()) {
-      Character from = entry.getKey();
-      Character to = entry.getValue();
-      builder.append(String.format("%c:%c, ", from, to));
-    }
-    // remove the extra comma and space at the end
-    if (map.size() > 0) {
-      builder.delete(builder.length() - 2, builder.length());
-    }
-    return builder.toString();
+    return String.format("Cipher %s: %s", System.identityHashCode(this), map);
   }
 
   /**
    * @return whether this is a supercipher of another cipher
    */
-  public boolean isSuperCipher(Cipher otherCipher) {
+  protected boolean isSuperCipher(Cipher otherCipher) {
     if (!alphabet.equals(otherCipher.alphabet)) {
       return false;
     }

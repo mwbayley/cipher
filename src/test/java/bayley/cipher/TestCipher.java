@@ -10,16 +10,15 @@ import static bayley.cipher.Cipher.randomCipher;
 
 public class TestCipher {
 
-
   @Test
   public void testSimpleCipher() {
     Cipher c = new Cipher();
     c.add('A', 'F');
     c.add('B', 'G');
     c.add('C', 'H');
-    String cipherString = c.toString();
-    String expectedString = "':', -:-, A:F, B:G, C:H";
-    Assert.assertEquals(expectedString, cipherString);
+    String mapString = c.map.toString();
+    String expectedMap = "{'=', -=-, A=F, B=G, C=H}";
+    Assert.assertEquals(expectedMap, mapString);
     Assert.assertEquals("FGH", c.decode("ABC"));
   }
 
@@ -73,14 +72,35 @@ public class TestCipher {
     Cipher c1 = randomCipher();
     Cipher c2 = new Cipher(c1);
     Assert.assertNotSame(c1, c2);
-    Assert.assertTrue(c1.isSuperCipher(c2));
-    Assert.assertTrue(c2.isSuperCipher(c1));
     Assert.assertEquals(c1, c2);
   }
 
   @Test
-  public void testRefine() {
-    
+  public void testSuperCipher() {
+    Cipher c1 = new Cipher();
+    c1.add('A', 'A');
+    c1.add('B', 'B');
+    c1.add('C', 'C');
+    Cipher c2 = new Cipher(c1);
+    Assert.assertTrue(c1.isSuperCipher(c2));
+    Assert.assertTrue(c2.isSuperCipher(c1));
+    c1.add('D', 'D');
+    Assert.assertTrue(c1.isSuperCipher(c2));
+    Assert.assertFalse(c2.isSuperCipher(c1));
+  }
+
+  @Test
+  public void testPositiveMatch() {
+    Cipher c1 = new Cipher();
+    Cipher c2 = c1.match("ABC", "CAT");
+    Assert.assertEquals("{'=', -=-, A=C, B=A, C=T}", c2.map.toString());
+  }
+
+  @Test
+  public void testNegativeMatch() {
+    Cipher c1 = new Cipher();
+    Cipher c2 = c1.match("AAA", "CAT");
+    Assert.assertEquals(null, c2);
   }
 
 }
