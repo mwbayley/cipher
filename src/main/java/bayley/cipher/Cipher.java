@@ -10,40 +10,15 @@ import com.google.common.collect.ImmutableSet;
 
 public class Cipher {
 
-  /** We use Guava's HashBiMap so that we can both encode and decode ciphers efficiently
-   *  We also don't use the BiMap interface because other implementations don't guarantee iteration order
-   *  That would mean a bunch more sorting in many of our tests. Relying on HashBiMap avoids this.
+  /** We use Guava's HashBiMap so that we can both encode and decode ciphers efficiently.
+   *  We also don't use the BiMap interface because other implementations don't guarantee iteration order.
+   *  That would mean a bunch more sorting in many of our tests. Relying on HashBiMap directly avoids this.
    */
   protected HashBiMap<Character, Character> map;
   private final Set<Character> alphabet;
-  /*private final String alphabetRegex;*/
-
-  private static Set<Character> englishAlphabet = ImmutableSet.of(
-        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-        'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-        'U', 'V', 'W', 'X', 'Y', 'Z', '\'', '-'
-      );
-
-  private static Set<Character> englishKnownCharacters = ImmutableSet.of('\'', '-');
 
   /**
-   * Constructor for default English alphabet and known characters
-   */
-  Cipher() {
-    this(englishAlphabet, englishKnownCharacters
-    );
-  }
-
-  /**
-   * Use this constructor if you're using a non-English alphabet without known characters
-   * @param alphabet Set of characters to be mapped by the Cipher
-   */
-  Cipher(final Set<Character> alphabet) {
-    this(alphabet, new HashSet<>());
-  }
-
-  /**
-   * Use this constructor if you're using a non-English alphabet with known characters
+   * Create a new empty Cipher and map knownCharacters to themselves
    * @param alphabet Set of characters to be mapped by the Cipher
    * @param knownCharacters Set of characters within words that aren't scrambled (like apostrophe and hyphen in English)
    */
@@ -57,18 +32,10 @@ public class Cipher {
     for (Character c : knownCharacters) {
       map.put(c, c);
     }
-    /*
-    // TODO build regex from set of characters while avoiding meta-characters?
-    // TODO or change to checking each char is in the set
-    StringBuilder builder = new StringBuilder();
-    for (Character c : alphabet) {
-      builder.append(c);
-    }
-    alphabetRegex = builder.toString();*/
   }
 
   /**
-   * Use this constructor to clone an existing Cipher (keys and values copied by reference)
+   * Use this constructor to clone an existing Cipher (duplicate the map but copy keys and values by reference)
     */
   Cipher(Cipher cipher) {
     map = HashBiMap.create(cipher.map);
@@ -103,18 +70,12 @@ public class Cipher {
   }
 
   /**
-   * Create a new English language Cipher with a random completely populated mapping
-   * @return the new Cipher
-   */
-  public static Cipher randomCipher() {
-    return randomCipher(englishAlphabet, englishKnownCharacters);
-  }
-
-  /**
    * Create a new Cipher with a random completely populated mapping
+   * @param alphabet  Set of Characters to be mapped randomly
+   * @param knownCharacters Characters in alphabet that we must map to themselves
    * @return the new Cipher
    */
-  public static Cipher randomCipher(Set<Character> alphabet, Set<Character> knownCharacters) {
+  public static Cipher randomCipher(final Set<Character> alphabet, final Set<Character> knownCharacters) {
     Cipher c = new Cipher(alphabet, knownCharacters);
     LinkedList<Character> mapFromChars = new LinkedList<>(c.alphabet);
     mapFromChars.removeAll(knownCharacters);
@@ -160,7 +121,6 @@ public class Cipher {
    * return: the supercipher implied if the dictionary word is the encoded word
    * or null if the dictionary word doesn't match the scrambled word with the current cipher
    */
-  @Nullable
   public Cipher match(String scrambledWord, String dictWord) {
     if (scrambledWord.length() != dictWord.length()) {
       return null;
@@ -210,9 +170,9 @@ public class Cipher {
     if (!(o instanceof Cipher)) {
       return false;
     }
-    // typecast o to Complex so that we can compare data members
     Cipher c = (Cipher) o;
-    // TODO can we get around comparing the alphabets somehow? - if they are backed by the same set it should be fine
+    // typically we create many ciphers referencing the same alphabet
+    // so this should usually just compare the references and return true without doing a deep equals()
     if (!alphabet.equals(c.alphabet)) {
       return false;
     }

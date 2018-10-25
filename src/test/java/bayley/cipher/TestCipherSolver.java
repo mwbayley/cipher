@@ -15,10 +15,10 @@ public class TestCipherSolver {
   @Test
   public void testRefine() throws IOException {
     String solution = "HALLOWEEN";
-    Cipher encodingCipher = Cipher.randomCipher();
-    String scrambled = encodingCipher.encode(solution);
     CipherSolver solver = new CipherSolver();
-    Cipher emptyCipher = new Cipher();
+    Cipher encodingCipher = Cipher.randomCipher(solver.alphabet, solver.knownCharacters);
+    String scrambled = encodingCipher.encode(solution);
+    Cipher emptyCipher = new Cipher(solver.alphabet, solver.knownCharacters);
     Set<Cipher> ciphers = solver.refine(emptyCipher, scrambled);
     Set<String> solutions = new LinkedHashSet<>();
     for (Cipher c : ciphers) {
@@ -37,8 +37,8 @@ public class TestCipherSolver {
 
   @Test
   public void testSimpleCipherSolver() throws IOException {
-    Cipher c = randomCipher();
     CipherSolver solver = new CipherSolver();
+    Cipher c = randomCipher(solver.alphabet, solver.knownCharacters);
     String sentence = solver.dict.randomSentence(10);
     String scrambled = c.encode(sentence);
     Set<String> solutions = solver.solve(scrambled);
