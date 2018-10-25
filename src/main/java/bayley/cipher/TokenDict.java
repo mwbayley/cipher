@@ -3,9 +3,7 @@ package bayley.cipher;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Arrays;
 
 import java.io.FileReader;
@@ -14,7 +12,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import com.sun.javaws.exceptions.InvalidArgumentException;
 
 public class TokenDict implements CipherDict {
 
@@ -31,7 +28,8 @@ public class TokenDict implements CipherDict {
             );
   }
 
-  TokenDict(String dictPath, Set<Character> alphabet, LinkedHashSet<Character> knownCharacters) throws IOException {
+  TokenDict(String dictPath, Set<Character> alphabet, LinkedHashSet<Character> knownCharacters)
+          throws IOException {
     if (!alphabet.containsAll(knownCharacters)) {
       throw new IllegalArgumentException("Alphabet must contain all knownCharacters");
     }
@@ -43,7 +41,8 @@ public class TokenDict implements CipherDict {
       this.knownCharacters.put(c, knownCharToken--);
     }
     this.index = new LinkedHashMap<>();
-    // read in the dictionary to a hash map with keys based on a tokenized representation of the word
+    // read in the dictionary to a hash map with keys
+    // based on a tokenized representation of the word
     try(BufferedReader br = new BufferedReader(new FileReader(dictPath))) {
       String word;
       wordLoop: while ((word = br.readLine()) != null) {
@@ -104,7 +103,9 @@ public class TokenDict implements CipherDict {
       Character c = word.charAt(i);
       // all characters must be in our alphabet;
       if (!alphabet.contains(c)) {
-        throw new IllegalArgumentException(String.format("Word %s has non-alphabet character %c", word, c));
+        throw new IllegalArgumentException(
+                String.format("Word %s has non-alphabet character %c", word, c)
+        );
       }
       // we will use negative values for known Characters
       Byte knownCharToken = knownCharacters.get(c);

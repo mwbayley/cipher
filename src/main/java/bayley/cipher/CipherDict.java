@@ -3,11 +3,11 @@ package bayley.cipher;
 import java.util.Set;
 
 /**
- * A CipherDict loads a text dictionary into memory and permits lookup of potential matches of scrambled words
- * A valid minimal implementation is to just return the whole dictionary every time
- * You could also return only words of the same length, or subset the results another way
- * There is NO guarantee that all results returned match the supplied cipher
- * The goal here is on an efficient lookup of potential matches
+ * A CipherDict loads a text dictionary into memory and permits lookup of potential matches
+ * of scrambled words. A valid minimal implementation is to just return the whole dictionary.
+ * You could also return only words of the same length, or subset the results another way.
+ * There is NO guarantee that all results returned match the supplied cipher.
+ * The goal here is on an efficient lookup of potential matches.
  */
 public interface CipherDict {
 

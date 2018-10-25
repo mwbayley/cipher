@@ -1,18 +1,17 @@
 package bayley.cipher;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableSet;
 
 public class Cipher {
 
   /** We use Guava's HashBiMap so that we can both encode and decode ciphers efficiently.
-   *  We also don't use the BiMap interface because other implementations don't guarantee iteration order.
-   *  That would mean a bunch more sorting in many of our tests. Relying on HashBiMap directly avoids this.
+   *  We also don't use the BiMap interface because other implementations don't guarantee
+   *  iteration order. That would mean a bunch more sorting in many of our tests.
+   *  Relying on HashBiMap directly avoids this.
    */
   protected HashBiMap<Character, Character> map;
   private final Set<Character> alphabet;
@@ -20,7 +19,8 @@ public class Cipher {
   /**
    * Create a new empty Cipher and map knownCharacters to themselves
    * @param alphabet Set of characters to be mapped by the Cipher
-   * @param knownCharacters Set of characters within words that aren't scrambled (like apostrophe and hyphen in English)
+   * @param knownCharacters Set of characters within words that aren't scrambled
+   *                        (like apostrophe and hyphen in English)
    */
   Cipher(final Set<Character> alphabet, final Set<Character> knownCharacters) {
     this.alphabet = alphabet;
@@ -35,7 +35,8 @@ public class Cipher {
   }
 
   /**
-   * Use this constructor to clone an existing Cipher (duplicate the map but copy keys and values by reference)
+   * Use this constructor to clone an existing Cipher
+   * (duplicate the map but copy keys and values by reference)
     */
   Cipher(Cipher cipher) {
     map = HashBiMap.create(cipher.map);
@@ -62,10 +63,14 @@ public class Cipher {
     // This exception occurs when the value is already present in the HashBiMap
     // we will catch it and throw our own so the message is clearer in this context
     catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(String.format("Character %c is already mapped to in the cipher", to));
+      throw new IllegalArgumentException(
+              String.format("Character %c is already mapped to in the cipher", to)
+      );
     }
     if (conflictingMappingFrom) {
-      throw new IllegalArgumentException(String.format("Character %c is already mapped from in the cipher", from));
+      throw new IllegalArgumentException(
+              String.format("Character %c is already mapped from in the cipher", from)
+      );
     }
   }
 
@@ -75,7 +80,8 @@ public class Cipher {
    * @param knownCharacters Characters in alphabet that we must map to themselves
    * @return the new Cipher
    */
-  public static Cipher randomCipher(final Set<Character> alphabet, final Set<Character> knownCharacters) {
+  public static Cipher randomCipher(final Set<Character> alphabet,
+                                    final Set<Character> knownCharacters) {
     Cipher c = new Cipher(alphabet, knownCharacters);
     LinkedList<Character> mapFromChars = new LinkedList<>(c.alphabet);
     mapFromChars.removeAll(knownCharacters);
@@ -172,7 +178,7 @@ public class Cipher {
     }
     Cipher c = (Cipher) o;
     // typically we create many ciphers referencing the same alphabet
-    // so this should usually just compare the references and return true without doing a deep equals()
+    // so this should usually just compare the references and return true without a deep equals()
     if (!alphabet.equals(c.alphabet)) {
       return false;
     }

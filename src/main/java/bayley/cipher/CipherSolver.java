@@ -32,7 +32,11 @@ public class CipherSolver {
   }
 
   CipherSolver () throws IOException {
-    this("/usr/share/dict/american-english", englishAlphabet, new LinkedHashSet<>(englishKnownCharacters));
+    this(
+            "/usr/share/dict/american-english",
+            englishAlphabet,
+            new LinkedHashSet<>(englishKnownCharacters)
+    );
   }
 
   /**
@@ -41,7 +45,8 @@ public class CipherSolver {
    * @param dictPath local path to newline delimited dictionary
    * @throws IOException if the dict doesn't exist or can't be read
    */
-  CipherSolver (String dictPath, Set<Character> alphabet, LinkedHashSet<Character> knownCharacters) throws IOException {
+  CipherSolver (String dictPath, Set<Character> alphabet, LinkedHashSet<Character> knownCharacters)
+          throws IOException {
     // read in the dictionary and create data structures for lookup
     dict = new TokenDict(dictPath, alphabet, knownCharacters);
     this.alphabet = alphabet;
@@ -76,7 +81,7 @@ public class CipherSolver {
       // here we strip away punctuation and check for valid words
       // we need to allow words that precede punctuation but not words like "éclair"
       // if we see an unknown character that isn't at the end of the word we can't solve this
-      // or, to rephrase, if we see an alphabet character after an unknown character we return no solution
+      // TLDR: if we see an alphabet character after an unknown character we return no solution
       boolean seenNonAlphabetCharacter = false;
       StringBuilder builder = new StringBuilder();
       for (Character c : scrambledWord.toCharArray()) {
