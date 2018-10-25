@@ -14,13 +14,15 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
+import com.sun.javaws.exceptions.InvalidArgumentException;
+
 public class TokenDict implements CipherDict {
 
-  private final HashMap<Object, Set<String>> index;
+  private final HashMap<Object, LinkedHashSet<String>> index;
   private int size;
   private final Set<Character> alphabet;
-  // need LinkedHashSet to guarantee consistent iteration order over knownCharacters;
-  private final LinkedHashSet<Character> knownCharacters;
+  // each knownCharacter will have an associated negative value used to tokenize it;
+  private final HashMap<Character, Byte> knownCharacters;
 
   TokenDict() throws IOException {
     this("/usr/share/dict/words",
@@ -34,13 +36,25 @@ public class TokenDict implements CipherDict {
       throw new IllegalArgumentException("Alphabet must contain all knownCharacters");
     }
     this.alphabet = alphabet;
-    this.knownCharacters = knownCharacters;
+    this.knownCharacters = new LinkedHashMap<>();
+    // each known char will be assigned a unique negative token
+    byte knownCharToken = -1;
+    for (Character c : knownCharacters) {
+      this.knownCharacters.put(c, knownCharToken--);
+    }
     this.index = new LinkedHashMap<>();
     // read in the dictionary to a hash map with keys based on a tokenized representation of the word
     try(BufferedReader br = new BufferedReader(new FileReader(dictPath))) {
       String word;
-      while ((word = br.readLine()) != null) {
-        this.add(CipherDictKey(word), word.toUpperCase());
+      wordLoop: while ((word = br.readLine()) != null) {
+        word = word.toUpperCase();
+        // exclude words with non-alphabet characters
+        for (Character c : word.toCharArray()) {
+          if (!alphabet.contains(c)) {
+            continue wordLoop;
+          }
+        }
+        this.add(CipherDictKey(word), word);
         size++;
       }
     }
@@ -49,7 +63,7 @@ public class TokenDict implements CipherDict {
 
   public String stats() {
     int maxSize = 0;
-    for (Map.Entry<Object, Set<String>> results  : index.entrySet()) {
+    for (Map.Entry<Object, LinkedHashSet<String>> results  : index.entrySet()) {
       int size = results.getValue().size();
       if (size > maxSize) {
         maxSize = size;
@@ -64,12 +78,13 @@ public class TokenDict implements CipherDict {
 
   // get the list that matches the key, add the word to it
   private void add (Object key, String word) {
-    Set<String> resultList = index.get(key);
-    if (resultList == null) {
-      resultList = new LinkedHashSet<>();
-      index.put(key, resultList);
+    LinkedHashSet<String> resultSet = index.get(key);
+    // if there are no results yet for this key we add a new set to hold them
+    if (resultSet == null) {
+      resultSet = new LinkedHashSet<>();
+      index.put(key, resultSet);
     }
-    resultList.add(word);
+    resultSet.add(word);
   }
 
   public Set<String> potentialMatches (Cipher cipher, String scrambledWord) {
@@ -86,24 +101,35 @@ public class TokenDict implements CipherDict {
     Byte nChars = 0;
     // tokenize the characters in the string
     wordCharLoop: for (int i = 0; i < word.length(); i++) {
-      Character thisChar = Character.toLowerCase(word.charAt(i));
+      Character c = word.charAt(i);
+      // all characters must be in our alphabet;
+      if (!alphabet.contains(c)) {
+        throw new IllegalArgumentException(String.format("Word %s has non-alphabet character %c", word, c));
+      }
       // we will use negative values for known Characters
-      byte knownCharToken = 0;
-      for (Character c : knownCharacters) {
-        if (thisChar.equals(c)) {
-          tokenized[i] = --knownCharToken;
-          continue wordCharLoop;
+      Byte knownCharToken = knownCharacters.get(c);
+      if (knownCharToken != null) {
+        tokenized[i] = knownCharToken;
+      }
+      // other alphabet characters are represented by positive tokens
+      else {
+        Byte prevToken = charToByte.putIfAbsent(c, nChars);
+        // if we have seen this character already in this word we give it the same token
+        if (prevToken != null) {
+          tokenized[i] = prevToken;
+        }
+        // if this is a new character we give it the next token
+        else {
+          tokenized[i] = ++nChars;
         }
       }
-      Byte prevToken = charToByte.putIfAbsent(thisChar, nChars);
-      tokenized[i] = (prevToken == null) ? nChars++ : prevToken;
     }
     // return a hashCode based on the array elements (and positions)
     return Arrays.hashCode(tokenized);
   }
 
   public String randomWord() {
-    Collection<Set<String>> dictSets = index.values();
+    Collection<LinkedHashSet<String>> dictSets = index.values();
     int num = (int) (Math.random() * dictSets.size());
     Set<String> randomSet = null;
     for (Set<String> list: dictSets) {

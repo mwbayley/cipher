@@ -1,6 +1,7 @@
 package bayley.cipher;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.LinkedHashSet;
 
@@ -71,21 +72,34 @@ public class CipherSolver {
     // start with one candidate - an empty Cipher
     candidateCiphers.add(new Cipher(alphabet, knownCharacters));
     for (String scrambledWord : scrambledWords) {
-      // TODO change this to remove non-alphabet characters
-      // TODO CipherSet has a shared dictionary?
-      /*
+      scrambledWord = scrambledWord.toUpperCase();
+      // here we strip away punctuation and check for valid words
+      // we need to allow words that precede punctuation but not words like "éclair"
+      // if we see an unknown character that isn't at the end of the word we can't solve this
+      // or, to rephrase, if we see an alphabet character after an unknown character we return no solution
+      boolean seenNonAlphabetCharacter = false;
       StringBuilder builder = new StringBuilder();
-      for (Character c : scrambledWord.toUpperCase().toCharArray()) {
-        if ()
-
-      }*/
-      // this will be the set of candidates for the next iteration
-      Set<Cipher> newCandidateCiphers = new LinkedHashSet<>();
-      String strippedWord = scrambledWord.toUpperCase().replaceAll("[^A-Z\'-]","");
-      // if this word was only punctuation just skip it
+      for (Character c : scrambledWord.toCharArray()) {
+        if (alphabet.contains(c)) {
+          // can't solve a cipher with a word containing characters
+          // not in the alphabet that aren't at the end (like punctuation)
+          if (seenNonAlphabetCharacter) {
+            System.out.println(String.format("Character %c isn't in our alphabet", c));
+            return new HashSet<>();
+          }
+          builder.append(c);
+        }
+        else {
+          seenNonAlphabetCharacter = true;
+        }
+      }
+      String strippedWord = builder.toString();
+      // if this word was only punctuation (like the always tasteful em-dash "—") just skip it
       if (strippedWord.equals("")) {
         continue;
       }
+      // this will be the set of candidates for the next iteration
+      Set<Cipher> newCandidateCiphers = new LinkedHashSet<>();
       // new candidate ciphers are superciphers of old candidates that also match the new word
       for (Cipher cipher : candidateCiphers) {
         if (cipher == null) {
