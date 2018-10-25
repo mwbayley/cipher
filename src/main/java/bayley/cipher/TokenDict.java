@@ -1,6 +1,8 @@
 package bayley.cipher;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -10,18 +12,30 @@ import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 
 public class TokenDict implements CipherDict {
 
-  private HashMap<Object, List<String>> index;
+  private final HashMap<Object, Set<String>> index;
   private int size;
+  private final Set<Character> alphabet;
+  // need LinkedHashSet to guarantee consistent iteration order over knownCharacters;
+  private final LinkedHashSet<Character> knownCharacters;
 
   TokenDict() throws IOException {
-    this("/usr/share/dict/words");
+    this("/usr/share/dict/words",
+            CipherSolver.englishAlphabet,
+            new LinkedHashSet<>(CipherSolver.englishKnownCharacters)
+            );
   }
 
-  TokenDict(String dictPath) throws IOException {
-    this.index = new HashMap<>();
+  TokenDict(String dictPath, Set<Character> alphabet, LinkedHashSet<Character> knownCharacters) throws IOException {
+    if (!alphabet.containsAll(knownCharacters)) {
+      throw new IllegalArgumentException("Alphabet must contain all knownCharacters");
+    }
+    this.alphabet = alphabet;
+    this.knownCharacters = knownCharacters;
+    this.index = new LinkedHashMap<>();
     // read in the dictionary to a hash map with keys based on a tokenized representation of the word
     try(BufferedReader br = new BufferedReader(new FileReader(dictPath))) {
       String word;
@@ -35,7 +49,7 @@ public class TokenDict implements CipherDict {
 
   public String stats() {
     int maxSize = 0;
-    for (Map.Entry<Object, List<String>> results  : index.entrySet()) {
+    for (Map.Entry<Object, Set<String>> results  : index.entrySet()) {
       int size = results.getValue().size();
       if (size > maxSize) {
         maxSize = size;
@@ -50,19 +64,19 @@ public class TokenDict implements CipherDict {
 
   // get the list that matches the key, add the word to it
   private void add (Object key, String word) {
-    List<String> resultList = index.get(key);
+    Set<String> resultList = index.get(key);
     if (resultList == null) {
-      resultList = new LinkedList<>();
+      resultList = new LinkedHashSet<>();
       index.put(key, resultList);
     }
     resultList.add(word);
   }
 
-  public List<String> getAll (Cipher cipher, String scrambledWord) {
+  public Set<String> potentialMatches (Cipher cipher, String scrambledWord) {
     return index.get(CipherDictKey(scrambledWord));
   }
 
-  private static int CipherDictKey(String word) {
+  private int CipherDictKey(String word) {
     if (word.length() == 0) {
       throw new RuntimeException("Can't tokenize a null or empty word");
     }
@@ -71,18 +85,15 @@ public class TokenDict implements CipherDict {
     // number of unique characters encountered so far
     Byte nChars = 0;
     // tokenize the characters in the string
-    for (int i = 0; i < word.length(); i++) {
+    wordCharLoop: for (int i = 0; i < word.length(); i++) {
       Character thisChar = Character.toLowerCase(word.charAt(i));
-      // we will hard-code mappings to negative values for punctuation (since it isn't scrambled)
-      // we reserve the token -1 for an apostrophe
-      if (thisChar.equals('\'')) {
-        tokenized[i] = -1;
-        continue;
-      }
-      // we reserve the token -2 for a hyphen
-      if (thisChar.equals('-')) {
-        tokenized[i] = -2;
-        continue;
+      // we will use negative values for known Characters
+      byte knownCharToken = 0;
+      for (Character c : knownCharacters) {
+        if (thisChar.equals(c)) {
+          tokenized[i] = --knownCharToken;
+          continue wordCharLoop;
+        }
       }
       Byte prevToken = charToByte.putIfAbsent(thisChar, nChars);
       tokenized[i] = (prevToken == null) ? nChars++ : prevToken;
@@ -92,20 +103,20 @@ public class TokenDict implements CipherDict {
   }
 
   public String randomWord() {
-    Collection<List<String>> dictLists = index.values();
-    int num = (int) (Math.random() * dictLists.size());
-    List<String> randomList = null;
-    for (List<String> list: dictLists) {
+    Collection<Set<String>> dictSets = index.values();
+    int num = (int) (Math.random() * dictSets.size());
+    Set<String> randomSet = null;
+    for (Set<String> list: dictSets) {
       if (--num < 0) {
-        randomList = list;
+        randomSet = list;
         break;
       }
     }
-    if (randomList == null) {
+    if (randomSet == null) {
       throw new RuntimeException("Can't find a random word");
     }
-    num = (int) (Math.random() * randomList.size());
-    for (String randomWord: randomList) {
+    num = (int) (Math.random() * randomSet.size());
+    for (String randomWord: randomSet) {
       if (--num < 0) return randomWord;
     }
     throw new RuntimeException("Can't find a random word");

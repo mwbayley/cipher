@@ -3,13 +3,15 @@ package bayley.cipher;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.Set;
 
 public class ListDict implements CipherDict {
 
-  private List<String> dictList;
+  private Set<String> dictSet;
   private int size;
 
   ListDict() throws IOException {
@@ -17,18 +19,16 @@ public class ListDict implements CipherDict {
   }
 
   ListDict(String dictPath) throws IOException {
-    dictList = new LinkedList<>();
+    dictSet = new LinkedHashSet<>();
     size = 0;
     // read in the dictionary to a list
     try(BufferedReader br = new BufferedReader(new FileReader(dictPath))) {
       String word;
       while ((word = br.readLine()) != null) {
-
-        dictList.add(word.toUpperCase());
+        dictSet.add(word.toUpperCase());
         size++;
       }
     }
-    System.out.println(stats());
   }
 
   public String stats() {
@@ -39,12 +39,21 @@ public class ListDict implements CipherDict {
     return size;
   }
 
-  public List<String> getAll(Cipher c, String scrambled) {
-    return dictList;
+  public Set<String> potentialMatches(Cipher c, String scrambled) {
+    return dictSet;
   }
 
   public String randomWord() {
-    int i = new Random().nextInt(size + 1);
-    return dictList.get(i);
+    int num = new Random().nextInt(size + 1);
+    int i = 0;
+    String lastWord = "";
+    for(String word : dictSet)
+    {
+      if (i == num)
+        return word;
+      i++;
+      lastWord = word;
+    }
+    return lastWord;
   }
 }

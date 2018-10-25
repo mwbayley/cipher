@@ -14,16 +14,16 @@ public class CipherSolver {
 
 
   // TODO move these to a config or properties file
-  private static Set<Character> englishAlphabet = ImmutableSet.of(
+  protected static Set<Character> englishAlphabet = ImmutableSet.of(
           'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
           'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
           'U', 'V', 'W', 'X', 'Y', 'Z', '\'', '-'
   );
-  private static Set<Character> englishKnownCharacters = ImmutableSet.of('\'', '-');
+  protected static Set<Character> englishKnownCharacters = ImmutableSet.of('\'', '-');
 
   public static void main (String[] args) {
     try {
-      CipherSolver cs = new CipherSolver("/usr/share/dict/american-english");
+      CipherSolver cs = new CipherSolver();
     } catch (IOException e) {
       System.out.println(e.getMessage());
     }
@@ -31,7 +31,7 @@ public class CipherSolver {
   }
 
   CipherSolver () throws IOException {
-    this("/usr/share/dict/american-english");
+    this("/usr/share/dict/american-english", englishAlphabet, new LinkedHashSet<>(englishKnownCharacters));
   }
 
   /**
@@ -40,11 +40,11 @@ public class CipherSolver {
    * @param dictPath local path to newline delimited dictionary
    * @throws IOException if the dict doesn't exist or can't be read
    */
-  CipherSolver (String dictPath) throws IOException {
+  CipherSolver (String dictPath, Set<Character> alphabet, LinkedHashSet<Character> knownCharacters) throws IOException {
     // read in the dictionary and create data structures for lookup
-    dict = new TokenDict(dictPath);
-    alphabet = englishAlphabet;
-    knownCharacters = englishKnownCharacters;
+    dict = new TokenDict(dictPath, alphabet, knownCharacters);
+    this.alphabet = alphabet;
+    this.knownCharacters = knownCharacters;
     System.out.println(dict.stats());
   }
 
