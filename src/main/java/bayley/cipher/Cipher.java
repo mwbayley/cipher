@@ -16,7 +16,8 @@ public class Cipher {
    *  That would mean a bunch more sorting in each of our tests. Relying on HashBiMap avoids this.
    */
   private HashBiMap<Character, Character> map;
-  private Set<Character> alphabet;
+  private final Set<Character> alphabet;
+  /*private final String alphabetRegex;*/
 
   private static Set<Character> englishAlphabet = ImmutableSet.of(
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
@@ -27,7 +28,7 @@ public class Cipher {
   private static Set<Character> englishKnownCharacters = ImmutableSet.of('\'', '-');
 
   /**
-   * Constructor for default English alphabet
+   * Constructor for default English alphabet and known characters
    */
   Cipher() {
     this(englishAlphabet, englishKnownCharacters
@@ -35,24 +36,42 @@ public class Cipher {
   }
 
   /**
-   * Use this constructor if you're using a non-English alphabet
+   * Use this constructor if you're using a non-English alphabet without known characters
+   * @param alphabet Set of characters to be mapped by the Cipher
+   */
+  Cipher(final Set<Character> alphabet) {
+    this(alphabet, new HashSet<>());
+  }
+
+  /**
+   * Use this constructor if you're using a non-English alphabet with known characters
    * @param alphabet Set of characters to be mapped by the Cipher
    * @param knownCharacters Set of characters within words that aren't scrambled (like apostrophe and hyphen in English)
    */
-  public Cipher(Set<Character> alphabet, Set<Character> knownCharacters) {
-    this.alphabet = new HashSet<>(alphabet);
-    this.alphabet.addAll(knownCharacters);
+  Cipher(final Set<Character> alphabet, final Set<Character> knownCharacters) {
+    this.alphabet = alphabet;
+    if (!alphabet.containsAll(knownCharacters)) {
+      throw new IllegalArgumentException("Alphabet must contain all knownCharacters");
+    }
     map = HashBiMap.create(this.alphabet.size());
     // prepopulate identity mappings for intra-word punctuation or other non-scrambled characters
     for (Character c : knownCharacters) {
       map.put(c, c);
     }
+    /*
+    // TODO build regex from set of characters while avoiding meta-characters?
+    // TODO or change to checking each char is in the set
+    StringBuilder builder = new StringBuilder();
+    for (Character c : alphabet) {
+      builder.append(c);
+    }
+    alphabetRegex = builder.toString();*/
   }
 
   /**
    * Use this constructor to clone an existing Cipher (keys and values copied by reference)
     */
-  public Cipher(Cipher cipher) {
+  Cipher(Cipher cipher) {
     map = HashBiMap.create(cipher.map);
     alphabet = cipher.alphabet;
   }
@@ -169,7 +188,7 @@ public class Cipher {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-
+    builder.append(String.format("Cipher %s: ", System.identityHashCode(this)));
     for (Map.Entry<Character, Character> entry : map.entrySet()) {
       Character from = entry.getKey();
       Character to = entry.getValue();
@@ -190,5 +209,29 @@ public class Cipher {
       return false;
     }
     return map.entrySet().containsAll(otherCipher.map.entrySet());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    // If the cipher is compared with itself then return true
+    if (o == this) {
+      return true;
+    }
+    // Check if o is an instance of cipher or not ("null instanceof [type]" also returns false)
+    if (!(o instanceof Cipher)) {
+      return false;
+    }
+    // typecast o to Complex so that we can compare data members
+    Cipher c = (Cipher) o;
+    // TODO can we get around comparing the alphabets somehow? - if they are backed by the same set it should be fine
+    if (!alphabet.equals(c.alphabet)) {
+      return false;
+    }
+    return map.equals(c.map);
+  }
+
+  @Override
+  public int hashCode() {
+    return alphabet.hashCode() * map.hashCode();
   }
 }
