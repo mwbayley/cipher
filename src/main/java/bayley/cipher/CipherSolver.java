@@ -11,18 +11,8 @@ public class CipherSolver {
   protected final Set<Character> alphabet;
   protected final Set<Character> knownCharacters;
 
-  public static void main (String[] args) {
-    try {
-      CipherSolver cs = new CipherSolver();
-    } catch (IOException e) {
-      System.out.println(e.getMessage());
-    }
-    
-  }
-
   CipherSolver () throws IOException {
     this(
-            "/usr/share/dict/american-english",
             Config.englishAlphabet,
             new LinkedHashSet<>(Config.englishKnownCharacters)
     );
@@ -31,16 +21,16 @@ public class CipherSolver {
   /**
    * a CipherSolver uses a single dictionary to solve many ciphers
    *
-   * @param dictPath local path to newline delimited dictionary
+   * @param alphabet set of valid characters in our cipher
+   * @param knownCharacters set of characters in the alphabet that must map to themselves
    * @throws IOException if the dict doesn't exist or can't be read
    */
-  CipherSolver (String dictPath, Set<Character> alphabet, LinkedHashSet<Character> knownCharacters)
+  CipherSolver (Set<Character> alphabet, LinkedHashSet<Character> knownCharacters)
           throws IOException {
     // read in the dictionary and create data structures for lookup
-    dict = new TokenDict(dictPath, alphabet, knownCharacters);
+    dict = new TokenDict(alphabet, knownCharacters);
     this.alphabet = alphabet;
     this.knownCharacters = knownCharacters;
-    System.out.println(dict.stats());
   }
 
   /**

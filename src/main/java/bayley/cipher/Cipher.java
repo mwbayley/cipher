@@ -13,7 +13,7 @@ public class Cipher {
    *  iteration order. That would mean a bunch more sorting in many of our tests.
    *  Relying on HashBiMap directly avoids this.
    */
-  protected HashBiMap<Character, Character> map;
+  protected final HashBiMap<Character, Character> map;
   private final Set<Character> alphabet;
 
   /**

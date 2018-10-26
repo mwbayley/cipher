@@ -24,7 +24,7 @@ public class TestCipher {
   @Test
   public void testRandomCipher() throws IOException {
     Cipher c = randomCipher(Config.englishAlphabet, Config.englishKnownCharacters);
-    CipherDict dict = new ListDict();
+    CipherDict dict = new SingleSetDict();
     String sentence = dict.randomSentence(10);
     String scrambled = c.encode(sentence);
     String unscrambled = c.decode(scrambled);

@@ -1,12 +1,12 @@
 package bayley.cipher;
 
+import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.HashMap;
 import java.util.Arrays;
 
-import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Map;
@@ -22,13 +22,13 @@ public class TokenDict implements CipherDict {
   private final HashMap<Character, Byte> knownCharacters;
 
   TokenDict() throws IOException {
-    this("/usr/share/dict/words",
+    this(
             Config.englishAlphabet,
             new LinkedHashSet<>(Config.englishKnownCharacters)
             );
   }
 
-  TokenDict(String dictPath, Set<Character> alphabet, LinkedHashSet<Character> knownCharacters)
+  TokenDict(Set<Character> alphabet, LinkedHashSet<Character> knownCharacters)
           throws IOException {
     if (!alphabet.containsAll(knownCharacters)) {
       throw new IllegalArgumentException("Alphabet must contain all knownCharacters");
@@ -43,20 +43,24 @@ public class TokenDict implements CipherDict {
     this.index = new LinkedHashMap<>();
     // read in the dictionary to a hash map with keys
     // based on a tokenized representation of the word
-    try(BufferedReader br = new BufferedReader(new FileReader(dictPath))) {
-      String word;
-      wordLoop: while ((word = br.readLine()) != null) {
-        word = word.toUpperCase();
-        // exclude words with non-alphabet characters
-        for (Character c : word.toCharArray()) {
-          if (!alphabet.contains(c)) {
-            continue wordLoop;
-          }
+    BufferedReader dictReader = new BufferedReader(
+            new InputStreamReader(
+                    getClass().getResourceAsStream(
+                            "/dictionaries/american-english.txt")));
+    String word;
+    wordLoop: while ((word = dictReader.readLine()) != null) {
+      word = word.toUpperCase();
+      // exclude words with non-alphabet characters
+      for (Character c : word.toCharArray()) {
+        if (!alphabet.contains(c)) {
+          // skip this word
+          continue wordLoop;
         }
-        this.add(CipherDictKey(word), word);
-        size++;
       }
+      this.add(CipherDictKey(word), word);
+      size++;
     }
+
   }
 
   public String stats() {
@@ -96,9 +100,9 @@ public class TokenDict implements CipherDict {
     byte[] tokenized = new byte[word.length()];
     HashMap<Character, Byte> charToByte = new HashMap<>();
     // number of unique characters encountered so far
-    Byte nChars = 0;
+    byte nChars = 0;
     // tokenize the characters in the string
-    wordCharLoop: for (int i = 0; i < word.length(); i++) {
+    for (int i = 0; i < word.length(); i++) {
       Character c = word.charAt(i);
       // all characters must be in our alphabet;
       if (!alphabet.contains(c)) {
