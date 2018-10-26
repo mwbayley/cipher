@@ -7,12 +7,11 @@ import org.junit.Assert;
 
 import static bayley.cipher.Cipher.randomCipher;
 
-
 public class TestCipher {
 
   @Test
   public void testSimpleCipher() {
-    Cipher c = new Cipher(CipherSolver.englishAlphabet, CipherSolver.englishKnownCharacters);
+    Cipher c = new Cipher(Config.englishAlphabet, Config.englishKnownCharacters);
     c.add('A', 'F');
     c.add('B', 'G');
     c.add('C', 'H');
@@ -24,7 +23,7 @@ public class TestCipher {
 
   @Test
   public void testRandomCipher() throws IOException {
-    Cipher c = randomCipher(CipherSolver.englishAlphabet, CipherSolver.englishKnownCharacters);
+    Cipher c = randomCipher(Config.englishAlphabet, Config.englishKnownCharacters);
     CipherDict dict = new ListDict();
     String sentence = dict.randomSentence(10);
     String scrambled = c.encode(sentence);
@@ -34,7 +33,7 @@ public class TestCipher {
 
   @Test
   public void testFromCollision() {
-    Cipher c = new Cipher(CipherSolver.englishAlphabet, CipherSolver.englishKnownCharacters);
+    Cipher c = new Cipher(Config.englishAlphabet, Config.englishKnownCharacters);
     c.add('A', 'B');
     boolean collisionCaught = false;
     String exceptionMsg = "";
@@ -50,7 +49,7 @@ public class TestCipher {
 
   @Test
   public void testToCollision() {
-    Cipher c = new Cipher(CipherSolver.englishAlphabet, CipherSolver.englishKnownCharacters);
+    Cipher c = new Cipher(Config.englishAlphabet, Config.englishKnownCharacters);
     c.add('A', 'B');
     boolean collisionCaught = false;
     String exceptionMsg = "";
@@ -66,7 +65,7 @@ public class TestCipher {
 
   @Test
   public void testCipherCloning() {
-    Cipher c1 = randomCipher(CipherSolver.englishAlphabet, CipherSolver.englishKnownCharacters);
+    Cipher c1 = randomCipher(Config.englishAlphabet, Config.englishKnownCharacters);
     Cipher c2 = new Cipher(c1);
     Assert.assertNotSame(c1, c2);
     Assert.assertEquals(c1, c2);
@@ -74,7 +73,7 @@ public class TestCipher {
 
   @Test
   public void testSuperCipher() {
-    Cipher c1 = new Cipher(CipherSolver.englishAlphabet, CipherSolver.englishKnownCharacters);
+    Cipher c1 = new Cipher(Config.englishAlphabet, Config.englishKnownCharacters);
     c1.add('A', 'A');
     c1.add('B', 'B');
     c1.add('C', 'C');
@@ -88,14 +87,14 @@ public class TestCipher {
 
   @Test
   public void testPositiveMatch() {
-    Cipher c1 = new Cipher(CipherSolver.englishAlphabet, CipherSolver.englishKnownCharacters);
+    Cipher c1 = new Cipher(Config.englishAlphabet, Config.englishKnownCharacters);
     Cipher c2 = c1.match("ABC", "CAT");
     Assert.assertEquals("{'=', -=-, A=C, B=A, C=T}", c2.map.toString());
   }
 
   @Test
   public void testNegativeMatch() {
-    Cipher c1 = new Cipher(CipherSolver.englishAlphabet, CipherSolver.englishKnownCharacters);
+    Cipher c1 = new Cipher(Config.englishAlphabet, Config.englishKnownCharacters);
     Cipher c2 = c1.match("AAA", "CAT");
     Assert.assertEquals(null, c2);
   }

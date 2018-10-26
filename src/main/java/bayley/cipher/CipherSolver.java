@@ -5,22 +5,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.LinkedHashSet;
 
-import com.google.common.collect.ImmutableSet;
-
 public class CipherSolver {
 
   protected final CipherDict dict;
   protected final Set<Character> alphabet;
   protected final Set<Character> knownCharacters;
-
-
-  // TODO move these to a config or properties file
-  protected static Set<Character> englishAlphabet = ImmutableSet.of(
-          'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-          'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-          'U', 'V', 'W', 'X', 'Y', 'Z', '\'', '-'
-  );
-  protected static Set<Character> englishKnownCharacters = ImmutableSet.of('\'', '-');
 
   public static void main (String[] args) {
     try {
@@ -34,8 +23,8 @@ public class CipherSolver {
   CipherSolver () throws IOException {
     this(
             "/usr/share/dict/american-english",
-            englishAlphabet,
-            new LinkedHashSet<>(englishKnownCharacters)
+            Config.englishAlphabet,
+            new LinkedHashSet<>(Config.englishKnownCharacters)
     );
   }
 
@@ -113,9 +102,9 @@ public class CipherSolver {
         newCandidateCiphers.addAll(refine(cipher, strippedWord));
       }
       candidateCiphers = newCandidateCiphers;
-    }
-    if (candidateCiphers.isEmpty()) {
-      return null;
+      if (candidateCiphers.isEmpty()) {
+        return new HashSet<>();
+      }
     }
     Set<String> results = new LinkedHashSet<>();
     for (Cipher solutionCipher : candidateCiphers) {

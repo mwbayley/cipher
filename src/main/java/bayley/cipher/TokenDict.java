@@ -23,8 +23,8 @@ public class TokenDict implements CipherDict {
 
   TokenDict() throws IOException {
     this("/usr/share/dict/words",
-            CipherSolver.englishAlphabet,
-            new LinkedHashSet<>(CipherSolver.englishKnownCharacters)
+            Config.englishAlphabet,
+            new LinkedHashSet<>(Config.englishKnownCharacters)
             );
   }
 
@@ -57,7 +57,6 @@ public class TokenDict implements CipherDict {
         size++;
       }
     }
-    System.out.println(stats());
   }
 
   public String stats() {
