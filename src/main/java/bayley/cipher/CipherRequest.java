@@ -10,22 +10,20 @@ public class CipherRequest implements RequestHandler<String, String> {
 
   public String handleRequest(String scrambled, Context context) {
     LambdaLogger logger = context.getLogger();
-    logger.log("received : " + scrambled);
-    String response = "";
+    logger.log(String.format("received : %s%n", scrambled));
+    String response;
     try {
       CipherSolver cs = new CipherSolver();
       StringBuilder builder = new StringBuilder();
-      for (String solutions : cs.solve(scrambled)) {
-        builder.append(response);
-        builder.append('\n');
+      for (String solution : cs.solve(scrambled)) {
+        builder.append(String.format("%s%n", solution));
       }
       builder.deleteCharAt(builder.length() - 1);
       response = builder.toString();
     } catch (IOException e) {
-      // TODO: logging and error handling;
-      response = "IOException";
+      response = e.getLocalizedMessage();
     }
-    logger.log("replied with : " + response);
+    logger.log(String.format("replied with : %n%s%n", response));
     return response;
   }
 
