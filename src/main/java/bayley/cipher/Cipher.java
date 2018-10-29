@@ -168,11 +168,11 @@ public class Cipher {
 
   @Override
   public boolean equals(Object o) {
-    // If the cipher is compared with itself then return true
+    // If the Cipher is compared with itself then return true
     if (o == this) {
       return true;
     }
-    // Check if o is an instance of cipher or not ("null instanceof [type]" also returns false)
+    // Check if o is an instance of Cipher or not ("null instanceof [type]" also returns false)
     if (!(o instanceof Cipher)) {
       return false;
     }

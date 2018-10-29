@@ -22,6 +22,12 @@ public interface CipherDict {
   int size();
 
   /**
+   * How many matches would we get if we didn't know any mappings yet?
+   * We'll use this to determine what order to examine words in
+   */
+  int nSimilarWords (String scrambledWord);
+
+  /**
    * here we guarantee that all potential matches will be retrieved
    * NO GUARANTEE that all of these match the cipher
    * should be an efficient lookup here

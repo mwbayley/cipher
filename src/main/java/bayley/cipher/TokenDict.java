@@ -78,6 +78,10 @@ public class TokenDict implements CipherDict {
     return size;
   }
 
+  public int nSimilarWords (String scrambledWord) {
+    return index.get(CipherDictKey(scrambledWord)).size();
+  }
+
   // get the list that matches the key, add the word to it
   private void add (Object key, String word) {
     LinkedHashSet<String> resultSet = index.get(key);

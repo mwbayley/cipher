@@ -27,5 +27,4 @@ public class CipherRequest implements RequestHandler<String, String> {
     return response;
   }
 
-
 }

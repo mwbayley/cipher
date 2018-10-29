@@ -45,6 +45,10 @@ public class SingleSetDict implements CipherDict {
     return size;
   }
 
+  public int nSimilarWords (String scrambledWord) {
+    return size;
+  }
+
   public Set<String> potentialMatches (Cipher c, String scrambled) {
     return dictSet;
   }

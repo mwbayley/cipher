@@ -39,10 +39,24 @@ public class TestCipherSolver {
   public void testSimpleCipherSolver() throws IOException {
     CipherSolver solver = new CipherSolver();
     Cipher c = randomCipher(solver.alphabet, solver.knownCharacters);
-    String sentence = solver.dict.randomSentence(10);
+    String sentence = new SingleSetDict().randomSentence(10);
     String scrambled = c.encode(sentence);
-    Set<String> solutions = solver.solve(scrambled);
+    Set<String> solutions = solver.solve(scrambled, true);
     Assert.assertTrue(solutions.contains(sentence));
+  }
+
+  @Test
+  public void testAnotherCipherSolver() throws IOException {
+    CipherSolver solver = new CipherSolver();
+    Cipher c = randomCipher(solver.alphabet, solver.knownCharacters);
+    String sentence =
+            "What have you done, there is no way this one will go well at all you aardvark!";
+    String scrambled = c.encode(sentence);
+    Set<String> solutions = solver.solve(scrambled, true);
+    for (String solution : solutions) {
+      System.out.println(solution);
+    }
+    Assert.assertTrue(solutions.contains(sentence.toUpperCase()));
   }
 
 }

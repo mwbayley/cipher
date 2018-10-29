@@ -1,9 +1,14 @@
 package bayley.cipher;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.LinkedHashSet;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class CipherSolver {
 
@@ -50,13 +55,13 @@ public class CipherSolver {
     return results;
   }
 
-  public Set<String> solve (final String scrambled) {
-    String[] scrambledWords = scrambled.split(" ");
-    Set<Cipher> candidateCiphers = new LinkedHashSet<>();
-    // start with one candidate - an empty Cipher
-    candidateCiphers.add(new Cipher(alphabet, knownCharacters));
-    for (String scrambledWord : scrambledWords) {
-      scrambledWord = scrambledWord.toUpperCase();
+  /**
+   * Tokenize. upcase, validate, dedupe, and reorder the words favorably for our algorithm
+   **/
+  public List<ScrambledWordEntry> prepareScrambledWords (final String scrambled) {
+    Set<String> scrambledWords = new LinkedHashSet<>();
+    // validate words and find a good order to examine them in (fewer matches and longer first)
+    for (String scrambledWord : scrambled.toUpperCase().split(" ")) {
       // here we strip away punctuation and check for valid words
       // we need to allow words that precede punctuation but not words like "éclair"
       // if we see an unknown character that isn't at the end of the word we can't solve this
@@ -69,11 +74,10 @@ public class CipherSolver {
           // not in the alphabet that aren't at the end (like punctuation)
           if (seenNonAlphabetCharacter) {
             System.out.println(String.format("Character %c isn't in our alphabet", c));
-            return new HashSet<>();
+            return new LinkedList<>();
           }
           builder.append(c);
-        }
-        else {
+        } else {
           seenNonAlphabetCharacter = true;
         }
       }
@@ -82,6 +86,41 @@ public class CipherSolver {
       if (strippedWord.equals("")) {
         continue;
       }
+      scrambledWords.add(strippedWord);
+    }
+    // Words have been deduped. Now we determine which order to examine them in
+    List<ScrambledWordEntry> scrambledWordsOrdered = new LinkedList<>();
+    for (String scrambledWord : scrambledWords) {
+      scrambledWordsOrdered.add(
+              new ScrambledWordEntry(scrambledWord, dict.nSimilarWords(scrambledWord))
+      );
+    }
+    Collections.sort(scrambledWordsOrdered);
+    return scrambledWordsOrdered;
+  }
+
+  public Set<String> solve (final String scrambled) {
+    return solve(scrambled, false);
+  }
+
+  public Set<String> solve (final String scrambled, final boolean verbose) {
+    List<ScrambledWordEntry> scrambledWordsOrdered = prepareScrambledWords(scrambled);
+    Set<Cipher> candidateCiphers = new LinkedHashSet<>();
+    // start with one candidate - an empty Cipher
+    candidateCiphers.add(new Cipher(alphabet, knownCharacters));
+    int nWords = 0;
+    for (ScrambledWordEntry scrambledWordEntry : scrambledWordsOrdered) {
+      String scrambledWord = scrambledWordEntry.scrambledWord;
+      if (verbose) {
+        System.out.printf(
+                "Matching word %d of %d: Comparing \"%s\" against %d potential ciphers%n",
+                ++nWords,
+                scrambledWordsOrdered.size(),
+                scrambledWord,
+                candidateCiphers.size()
+                );
+      }
+
       // this will be the set of candidates for the next iteration
       Set<Cipher> newCandidateCiphers = new LinkedHashSet<>();
       // new candidate ciphers are superciphers of old candidates that also match the new word
@@ -89,7 +128,7 @@ public class CipherSolver {
         if (cipher == null) {
           throw new RuntimeException("Got a null cypher somehow");
         }
-        newCandidateCiphers.addAll(refine(cipher, strippedWord));
+        newCandidateCiphers.addAll(refine(cipher, scrambledWord));
       }
       candidateCiphers = newCandidateCiphers;
       if (candidateCiphers.isEmpty()) {
@@ -103,5 +142,58 @@ public class CipherSolver {
     }
     return results;
 
+  }
+
+  /**
+   * ScrambledWordEntry is an internal class that helps us sort words in the scrambled string
+   * such that ones with fewer dictionary matches and more letters will come first.
+   * This prevents the number of possible solutions from getting out of hand.
+   *
+   * Note: this class has a natural ordering that is inconsistent with equals.
+   *     Don't use this with a SortedSet or SortedMap. Two different words with the same
+   *     uniqunenessRank will be incorrectly deduped.
+   */
+  private class ScrambledWordEntry implements Comparable<ScrambledWordEntry> {
+    protected final String scrambledWord;
+    private final int uniquenessRank;
+
+    ScrambledWordEntry (String scrambledWord, int nDictMatches) {
+      this.scrambledWord = scrambledWord;
+      HashSet<Character> seenChars = new HashSet<>();
+      for (Character c : scrambledWord.toCharArray()) {
+        seenChars.add(c);
+      }
+      int nUniqueChars = seenChars.size();
+      // we want to look at words with fewer dictionary matches and more characters first
+      // no specific reason for this formula - it could probably be improved
+      this.uniquenessRank = (10 * nDictMatches) / nUniqueChars;
+    }
+
+    @Override
+    public int compareTo (ScrambledWordEntry swe) {
+      return uniquenessRank - swe.uniquenessRank;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      throw new UnsupportedOperationException("Don't do that please");
+      /*
+       // If the ScrambledWordEntry is compared with itself then return true
+      if (o == this) {
+        return true;
+      }
+      // Check if o is an instance of ScrambedWordEntry or not
+      // ("null instanceof [type]" also returns false)
+      if (!(o instanceof ScrambledWordEntry)) {
+        return false;
+      }
+      ScrambledWordEntry swe = (ScrambledWordEntry) o;
+      return scrambledWord.equals(swe.scrambledWord);*/
+    }
+
+    @Override
+    public int hashCode() {
+      throw new UnsupportedOperationException("Don't do that please");
+    }
   }
 }
