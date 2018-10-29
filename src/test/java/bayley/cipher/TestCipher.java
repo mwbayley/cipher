@@ -29,8 +29,6 @@ public class TestCipher {
     String scrambled = c.encode(sentence);
     String unscrambled = c.decode(scrambled);
     Assert.assertEquals(sentence, unscrambled);
-    System.out.println(scrambled);
-    System.out.println(unscrambled);
   }
 
   @Test

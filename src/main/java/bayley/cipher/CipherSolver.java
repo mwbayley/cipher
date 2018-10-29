@@ -58,8 +58,8 @@ public class CipherSolver {
   /**
    * Tokenize. upcase, validate, dedupe, and reorder the words favorably for our algorithm
    **/
-  public List<ScrambledWordEntry> prepareScrambledWords (final String scrambled) {
-    Set<String> scrambledWords = new LinkedHashSet<>();
+  public SortedSet<ScrambledWordEntry> prepareScrambledWords (final String scrambled) {
+    SortedSet<ScrambledWordEntry> scrambledWords = new TreeSet<>();
     // validate words and find a good order to examine them in (fewer matches and longer first)
     for (String scrambledWord : scrambled.toUpperCase().split(" ")) {
       // here we strip away punctuation and check for valid words
@@ -74,7 +74,7 @@ public class CipherSolver {
           // not in the alphabet that aren't at the end (like punctuation)
           if (seenNonAlphabetCharacter) {
             System.out.println(String.format("Character %c isn't in our alphabet", c));
-            return new LinkedList<>();
+            return new TreeSet<>();
           }
           builder.append(c);
         } else {
@@ -86,17 +86,9 @@ public class CipherSolver {
       if (strippedWord.equals("")) {
         continue;
       }
-      scrambledWords.add(strippedWord);
+      scrambledWords.add(new ScrambledWordEntry(strippedWord, dict.nSimilarWords(strippedWord)));
     }
-    // Words have been deduped. Now we determine which order to examine them in
-    List<ScrambledWordEntry> scrambledWordsOrdered = new LinkedList<>();
-    for (String scrambledWord : scrambledWords) {
-      scrambledWordsOrdered.add(
-              new ScrambledWordEntry(scrambledWord, dict.nSimilarWords(scrambledWord))
-      );
-    }
-    Collections.sort(scrambledWordsOrdered);
-    return scrambledWordsOrdered;
+    return scrambledWords;
   }
 
   public Set<String> solve (final String scrambled) {
@@ -104,7 +96,7 @@ public class CipherSolver {
   }
 
   public Set<String> solve (final String scrambled, final boolean verbose) {
-    List<ScrambledWordEntry> scrambledWordsOrdered = prepareScrambledWords(scrambled);
+    SortedSet<ScrambledWordEntry> scrambledWordsOrdered = prepareScrambledWords(scrambled);
     Set<Cipher> candidateCiphers = new LinkedHashSet<>();
     // start with one candidate - an empty Cipher
     candidateCiphers.add(new Cipher(alphabet, knownCharacters));
@@ -145,13 +137,9 @@ public class CipherSolver {
   }
 
   /**
-   * ScrambledWordEntry is an internal class that helps us sort words in the scrambled string
-   * such that ones with fewer dictionary matches and more letters will come first.
+   * ScrambledWordEntry is an internal class that helps us sort words from the scrambled string
+   * such that ones with fewer dictionary matches and more letters can be matched first.
    * This prevents the number of possible solutions from getting out of hand.
-   *
-   * Note: this class has a natural ordering that is inconsistent with equals.
-   *     Don't use this with a SortedSet or SortedMap. Two different words with the same
-   *     uniqunenessRank will be incorrectly deduped.
    */
   private class ScrambledWordEntry implements Comparable<ScrambledWordEntry> {
     protected final String scrambledWord;
@@ -166,34 +154,41 @@ public class CipherSolver {
       int nUniqueChars = seenChars.size();
       // we want to look at words with fewer dictionary matches and more characters first
       // no specific reason for this formula - it could probably be improved
-      this.uniquenessRank = (10 * nDictMatches) / nUniqueChars;
+      this.uniquenessRank = (100 * nDictMatches) / nUniqueChars;
     }
 
     @Override
     public int compareTo (ScrambledWordEntry swe) {
-      return uniquenessRank - swe.uniquenessRank;
+      if (uniquenessRank != swe.uniquenessRank) {
+        return uniquenessRank - swe.uniquenessRank;
+      }
+      else {
+        // If the words have the same uniquenessRank we don't care about the order.
+        // We still need a natural ordering consistent with equals() though
+        // so we break the tie with the default String ordering.
+        return scrambledWord.compareTo(swe.scrambledWord);
+      }
+
     }
 
     @Override
-    public boolean equals(Object o) {
-      throw new UnsupportedOperationException("Don't do that please");
-      /*
-       // If the ScrambledWordEntry is compared with itself then return true
+    public boolean equals (Object o) {
+      // If the ScrambledWordEntry is compared with itself then return true
       if (o == this) {
         return true;
       }
-      // Check if o is an instance of ScrambedWordEntry or not
+      // Check if o is an instance of ScrambledWordEntry or not
       // ("null instanceof [type]" also returns false)
       if (!(o instanceof ScrambledWordEntry)) {
         return false;
       }
       ScrambledWordEntry swe = (ScrambledWordEntry) o;
-      return scrambledWord.equals(swe.scrambledWord);*/
+      return scrambledWord.equals(swe.scrambledWord);
     }
 
     @Override
-    public int hashCode() {
-      throw new UnsupportedOperationException("Don't do that please");
+    public int hashCode () {
+      return scrambledWord.hashCode();
     }
   }
 }
