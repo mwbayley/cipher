@@ -46,7 +46,7 @@ public class TestCipherSolver {
   }
 
   @Test
-  public void testHardCipherSolver() throws IOException {
+  public void testReorderCipherSolver() throws IOException {
     CipherSolver solver = new CipherSolver();
     Cipher c = randomCipher(solver.alphabet, solver.knownCharacters);
     String sentence =
@@ -56,4 +56,14 @@ public class TestCipherSolver {
     Assert.assertTrue(solutions.contains(sentence.toUpperCase()));
   }
 
+  /*@Test
+  public void testImpossibleCipherSolver() throws IOException {
+    CipherSolver solver = new CipherSolver();
+    Cipher c = randomCipher(solver.alphabet, solver.knownCharacters);
+    String sentence =
+            "What have you done, there is no way this one will go well at all";
+    String scrambled = c.encode(sentence);
+    Set<String> solutions = solver.solve(scrambled, true);
+    Assert.assertTrue(solutions.contains(sentence.toUpperCase()));
+  }*/
 }

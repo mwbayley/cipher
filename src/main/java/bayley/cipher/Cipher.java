@@ -20,7 +20,7 @@ public class Cipher {
    * Create a new empty Cipher and map knownCharacters to themselves
    * @param alphabet Set of characters to be mapped by the Cipher
    * @param knownCharacters Set of characters within words that aren't scrambled
-   *                        (like apostrophe and hyphen in English)
+   *                        (like apostrophe - and hyphen ' in English)
    */
   Cipher(final Set<Character> alphabet, final Set<Character> knownCharacters) {
     this.alphabet = alphabet;
