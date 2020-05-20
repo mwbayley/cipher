@@ -3,7 +3,7 @@ package bayley.cipher;
 import java.util.Set;
 
 /**
- * A CipherDict loads a text dictionary into memory and permits lookup of potential matches
+ * A CipherDict holds a dictionary in memory and permits lookup of potential matches
  * of scrambled words. A valid minimal implementation is to just return the whole dictionary.
  * You could also return only words of the same length, or subset the results another way.
  * There is NO guarantee that all results returned match the supplied cipher.
@@ -12,23 +12,13 @@ import java.util.Set;
 public interface CipherDict {
 
   /**
-   * Print info about the dictionary to stdout
-   */
-  String stats();
-
-  /**
-   * @return the number of words in the dictionary
-   */
-  int size();
-
-  /**
    * How many matches would we get if we didn't know any mappings yet?
    * We'll use this to determine what order to examine words in
    */
   int nSimilarWords (String scrambledWord);
 
   /**
-   * here we guarantee that all potential matches will be retrieved
+   * Here we guarantee that all potential matches will be retrieved
    * NO GUARANTEE that all of these match the cipher
    * should be an efficient lookup here
    */

@@ -16,19 +16,12 @@ import java.util.Set;
 public class TokenDict implements CipherDict {
 
   private final HashMap<Object, LinkedHashSet<String>> index;
-  private int size;
+  private int size = 0;
   private final Set<Character> alphabet;
   // each knownCharacter will have an associated negative value used to tokenize it;
   private final HashMap<Character, Byte> knownCharacters;
 
-  TokenDict() throws IOException {
-    this(
-            Config.englishAlphabet,
-            new LinkedHashSet<>(Config.englishKnownCharacters)
-            );
-  }
-
-  TokenDict(Set<Character> alphabet, LinkedHashSet<Character> knownCharacters)
+  TokenDict(Set<Character> alphabet, Set<Character> knownCharacters)
           throws IOException {
     if (!alphabet.containsAll(knownCharacters)) {
       throw new IllegalArgumentException("Alphabet must contain all knownCharacters");
@@ -57,13 +50,14 @@ public class TokenDict implements CipherDict {
           continue wordLoop;
         }
       }
-      this.add(CipherDictKey(word), word);
+      this.add(cipherDictKey(word), word);
       size++;
     }
 
   }
 
-  public String stats() {
+  @Override
+  public String toString() {
     int maxSize = 0;
     for (Map.Entry<Object, LinkedHashSet<String>> results  : index.entrySet()) {
       int size = results.getValue().size();
@@ -71,15 +65,18 @@ public class TokenDict implements CipherDict {
         maxSize = size;
       }
     }
-    return String.format("Size = %d, maximum key matches = %d", this.size, maxSize);
+    return String.format(
+            "%s has %d words, unique keys = %d, maximum key matches = %d",
+            super.toString(),
+            this.size,
+            index.size(),
+            maxSize
+    );
   }
 
-  public int size() {
-    return size;
-  }
-
+  @Override
   public int nSimilarWords (String scrambledWord) {
-    return index.get(CipherDictKey(scrambledWord)).size();
+    return index.get(cipherDictKey(scrambledWord)).size();
   }
 
   // get the list that matches the key, add the word to it
@@ -93,11 +90,12 @@ public class TokenDict implements CipherDict {
     resultSet.add(word);
   }
 
+  @Override
   public Set<String> potentialMatches (Cipher cipher, String scrambledWord) {
-    return index.get(CipherDictKey(scrambledWord));
+    return index.get(cipherDictKey(scrambledWord));
   }
 
-  private int CipherDictKey(String word) {
+  private int cipherDictKey(String word) {
     if (word.length() == 0) {
       throw new RuntimeException("Can't tokenize a null or empty word");
     }
@@ -114,7 +112,7 @@ public class TokenDict implements CipherDict {
                 String.format("Word %s has non-alphabet character %c", word, c)
         );
       }
-      // we will use negative values for known Characters
+      // we will use negative values for known characters
       Byte knownCharToken = knownCharacters.get(c);
       if (knownCharToken != null) {
         tokenized[i] = knownCharToken;
@@ -136,6 +134,7 @@ public class TokenDict implements CipherDict {
     return Arrays.hashCode(tokenized);
   }
 
+  @Override
   public String randomWord() {
     Collection<LinkedHashSet<String>> dictSets = index.values();
     int num = (int) (Math.random() * dictSets.size());
@@ -147,12 +146,12 @@ public class TokenDict implements CipherDict {
       }
     }
     if (randomSet == null) {
-      throw new RuntimeException("Can't find a random word");
+      throw new RuntimeException("Couldn't find a random word");
     }
     num = (int) (Math.random() * randomSet.size());
     for (String randomWord: randomSet) {
       if (--num < 0) return randomWord;
     }
-    throw new RuntimeException("Can't find a random word");
+    throw new RuntimeException("Couldn't find a random word");
   }
 }

@@ -12,6 +12,9 @@ import static bayley.cipher.Cipher.randomCipher;
 
 public class TestCipherSolver {
 
+  private static final int MILLISECOND = 1;
+  private static final int SECOND = 1000 * MILLISECOND;
+
   @Test
   public void testRefine() throws IOException {
     String solution = "HALLOWEEN";
@@ -45,7 +48,8 @@ public class TestCipherSolver {
     Assert.assertTrue(solutions.contains(sentence));
   }
 
-  @Test
+  // This test will timeout unless the input is reordered to consider the longer, distinctive word first
+  @Test(timeout=20*SECOND)
   public void testReorderCipherSolver() throws IOException {
     CipherSolver solver = new CipherSolver();
     Cipher c = randomCipher(solver.alphabet, solver.knownCharacters);
@@ -56,7 +60,8 @@ public class TestCipherSolver {
     Assert.assertTrue(solutions.contains(sentence.toUpperCase()));
   }
 
-  /*@Test
+  // This is a pathological example with many short, indistinct words. This causes the solution space to explode.
+  /*@Test(timeout=20*SECOND)
   public void testImpossibleCipherSolver() throws IOException {
     CipherSolver solver = new CipherSolver();
     Cipher c = randomCipher(solver.alphabet, solver.knownCharacters);

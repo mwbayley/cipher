@@ -13,7 +13,7 @@ public class SingleSetDict implements CipherDict {
   private int size;
 
   SingleSetDict() throws IOException {
-    this(Config.englishAlphabet);
+    this(Constants.ENGLISH_ALPHABET);
   }
 
   SingleSetDict(Set<Character> alphabet) throws IOException {
@@ -37,31 +37,30 @@ public class SingleSetDict implements CipherDict {
     }
   }
 
-  public String stats () {
-    return String.format("SingleSetDict has %d words", size);
+  @Override
+  public String toString() {
+    return String.format("%s has %d words", super.toString(), size);
   }
 
-  public int size () {
+  @Override
+  public int nSimilarWords(String scrambledWord) {
     return size;
   }
 
-  public int nSimilarWords (String scrambledWord) {
-    return size;
-  }
-
-  public Set<String> potentialMatches (Cipher c, String scrambled) {
+  @Override
+  public Set<String> potentialMatches(Cipher c, String scrambled) {
     return dictSet;
   }
 
-  public String randomWord () {
+  @Override
+  public String randomWord() {
     int num = new Random().nextInt(size + 1);
     int i = 0;
     String lastWord = "";
-    for(String word : dictSet)
-    {
-      if (i == num)
+    for (String word : dictSet) {
+      if (i++ == num) {
         return word;
-      i++;
+      }
       lastWord = word;
     }
     return lastWord;

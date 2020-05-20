@@ -2,6 +2,7 @@ package bayley.cipher;
 
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.Set;
 
 import com.google.common.collect.HashBiMap;
@@ -60,8 +61,8 @@ public class Cipher {
         conflictingMappingFrom = true;
       }
     }
-    // This exception occurs when the value is already present in the HashBiMap
-    // we will catch it and throw our own so the message is clearer in this context
+    // This exception occurs when the "to" value is already present in the HashBiMap.
+    // We will catch it and throw our own so the message is clearer in this context
     catch (IllegalArgumentException e) {
       throw new IllegalArgumentException(
               String.format("Character %c is already mapped to in the cipher", to)
@@ -75,7 +76,7 @@ public class Cipher {
   }
 
   /**
-   * Create a new Cipher with a random completely populated mapping
+   * Static factory method for a Cipher with a random completely populated mapping (for testing)
    * @param alphabet  Set of Characters to be mapped randomly
    * @param knownCharacters Characters in alphabet that we must map to themselves
    * @return the new Cipher
@@ -153,11 +154,11 @@ public class Cipher {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    return String.format("Cipher %s: %s", System.identityHashCode(this), map);
+    return String.format("%s: %s", super.toString(), map);
   }
 
   /**
-   * @return whether this is a supercipher of another cipher
+   * @return whether this is a supercipher of another cipher (i.e. superset of the mappings w/ same alphabet)
    */
   public boolean isSuperCipher(Cipher otherCipher) {
     if (!alphabet.equals(otherCipher.alphabet)) {
@@ -168,25 +169,22 @@ public class Cipher {
 
   @Override
   public boolean equals(Object o) {
-    // If the Cipher is compared with itself then return true
+    // if the Cipher is compared with itself then return true
     if (o == this) {
       return true;
     }
-    // Check if o is an instance of Cipher or not ("null instanceof [type]" also returns false)
+    // check if o is an instance of Cipher or not ("null instanceof [type]" also returns false)
     if (!(o instanceof Cipher)) {
       return false;
     }
     Cipher c = (Cipher) o;
     // typically we create many ciphers referencing the same alphabet
-    // so this should usually just compare the references and return true without a deep equals()
-    if (!alphabet.equals(c.alphabet)) {
-      return false;
-    }
-    return map.equals(c.map);
+    // so alphabet.equals() should usually just compare the references and return true without a deep equals()
+    return alphabet.equals(c.alphabet) && map.equals(c.map);
   }
 
   @Override
   public int hashCode() {
-    return alphabet.hashCode() * map.hashCode();
+    return Objects.hash(alphabet, map);
   }
 }
