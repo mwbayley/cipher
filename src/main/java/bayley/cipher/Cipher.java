@@ -139,17 +139,21 @@ public class Cipher {
     for (int i = 0; i < scrambledWord.length(); i++) {
       Character from = scrambledWord.charAt(i);
       Character to = dictWord.charAt(i);
-      // is there a conflicting map from this character already?
-      if (c.map.containsKey(from) && c.map.get(from) != to) {
-        // no match
+      // is there a conflicting mapping from this character already?
+      Character prevTo = c.map.get(from);
+      if (prevTo != null && prevTo != to) {
+        // can't be a match
         return null;
       }
-      // is there a conflicting map to this character already?
-      if (c.map.inverse().containsKey(to) && c.map.inverse().get(to) != from) {
-        // no match
+      // is there a conflicting mapping to this character already?
+      Character prevFrom = c.map.inverse().get(to);
+      if (prevFrom != null && prevFrom != from) {
+        // can't be a match
         return null;
       }
-      c.add(from, to);
+      if (prevTo == null || prevFrom == null) {
+        c.add(from, to);
+      }
     }
     return c;
   }
