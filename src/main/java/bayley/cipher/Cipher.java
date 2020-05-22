@@ -1,7 +1,10 @@
 package bayley.cipher;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -62,7 +65,7 @@ public class Cipher {
       }
     }
     // This exception occurs when the "to" value is already present in the HashBiMap.
-    // We will catch it and throw our own so the message is clearer in this context
+    // We will catch it and throw our own so the message is clearer in this context.
     catch (IllegalArgumentException e) {
       throw new IllegalArgumentException(
               String.format("Character %c is already mapped to in the cipher", to)
@@ -86,11 +89,9 @@ public class Cipher {
     Cipher c = new Cipher(alphabet, knownCharacters);
     LinkedList<Character> mapFromChars = new LinkedList<>(c.alphabet);
     mapFromChars.removeAll(knownCharacters);
-    LinkedList<Character> mapToChars = new LinkedList<>(mapFromChars);
+    List<Character> mapToChars = new ArrayList<>(mapFromChars);
     Collections.shuffle(mapToChars);
-    while (!mapFromChars.isEmpty() && !mapToChars.isEmpty()) {
-      c.add(mapFromChars.pop(), mapToChars.pop());
-    }
+    mapToChars.forEach(to -> c.add(mapFromChars.pop(), to));
     return c;
   }
 
@@ -102,16 +103,13 @@ public class Cipher {
     return apply(unscrambled, true);
   }
 
-  public String apply (String scrambled, final boolean inverse) {
+  private String apply (String scrambled, boolean inverse) {
+    Map<Character, Character> map = inverse ? this.map.inverse() : this.map;
     StringBuilder builder = new StringBuilder();
     for (char fromChar : scrambled.toUpperCase().toCharArray()) {
       Character toChar;
       if (alphabet.contains(fromChar)) {
-        if (inverse) {
-          toChar = map.inverse().get(fromChar);
-        } else {
-          toChar = map.get(fromChar);
-        }
+        toChar = map.get(fromChar);
         if (toChar == null) {
           toChar = '?';
         }
@@ -125,10 +123,15 @@ public class Cipher {
   }
 
   /**
-   * return: the supercipher implied if the dictionary word is the encoded word
-   * or null if the dictionary word doesn't match the scrambled word with the current cipher
+   * This method compares the dictionary word against the scrambled word using the mappings currently in the cipher.
+   * If it is a possible match, we create a new cipher that is a clone of the current one with additional mappings
+   * from the characters of the dictionary one to the scrambled one. We call this new cipher a "supercipher"
+   * (meaning it has a superset of the mappings).
+   *
+   * @return: the supercipher implied if dictionary word maps to the scrambled word or null if the dictionary word
+   * doesn't match.
    */
-  public Cipher match(String scrambledWord, String dictWord) {
+  public Cipher match(final String scrambledWord, final String dictWord) {
     if (scrambledWord.length() != dictWord.length()) {
       return null;
     }

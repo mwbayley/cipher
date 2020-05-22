@@ -1,7 +1,13 @@
 package bayley.cipher;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class CipherSolver {
 
@@ -46,10 +52,10 @@ public class CipherSolver {
   /**
    * Tokenize. upcase, validate, dedupe, and reorder the words favorably for our algorithm
    **/
-  public List<String> prepareScrambledWords(final String scrambled) {
+  public List<String> prepareScrambledWords(final String scrambledSentence) {
     SortedSet<ScrambledWordEntry> scrambledWords = new TreeSet<>();
     // validate words and find a good order to examine them in (fewer matches and longer first)
-    for (String scrambledWord : scrambled.toUpperCase().split(" ")) {
+    for (String scrambledWord : scrambledSentence.toUpperCase().split(" ")) {
       // here we strip away punctuation and check for valid words
       // we need to allow words that precede punctuation but not words like "éclair"
       // if we see an unknown character that isn't at the end of the word we can't solve this
@@ -137,8 +143,16 @@ public class CipherSolver {
     return solve(scrambled, false);
   }
 
-  public Set<String> solve(final String scrambled, boolean verbose) {
-    List<String> scrambledWordsOrdered = prepareScrambledWords(scrambled);
+  /**
+   * This is the main method that uses dynamic programming to unscramble the scrambled sentence. First we
+   * annotate and reorder the words so they're in a favorable order for out algorithm. We start with one
+   * "candidate solution" - a cipher with an empty mapping. Then we look at potential dictionary matches
+   * for the first word and create a set ciphers for these potential mappings. For each of those solutions,
+   * we examine the next word and do the same, and repeat until we look at the whole sentence. At the end
+   * we may have zero, one, or many solutions.
+   */
+  public Set<String> solve(final String scrambledSentence, boolean verbose) {
+    List<String> scrambledWordsOrdered = prepareScrambledWords(scrambledSentence);
     Set<Cipher> candidateCiphers = new HashSet<>();
     // start with one candidate - an empty Cipher except for the known characters
     candidateCiphers.add(new Cipher(alphabet, knownCharacters));
@@ -170,7 +184,7 @@ public class CipherSolver {
       }
     }
     Set<String> solutions = new HashSet<>();
-    candidateCiphers.forEach(c -> solutions.add(c.decode(scrambled)));
+    candidateCiphers.forEach(c -> solutions.add(c.decode(scrambledSentence)));
     return solutions;
   }
 }

@@ -15,9 +15,7 @@ public class TestCipher {
     c.add('A', 'F');
     c.add('B', 'G');
     c.add('C', 'H');
-    String mapString = c.map.toString();
-    String expectedMap = "{'=', -=-, A=F, B=G, C=H}";
-    Assert.assertEquals(expectedMap, mapString);
+    Assert.assertEquals("{'=', -=-, A=F, B=G, C=H}", c.map.toString());
     Assert.assertEquals("FGH", c.decode("ABC"));
   }
 

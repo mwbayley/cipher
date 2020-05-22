@@ -1,39 +1,37 @@
 package bayley.cipher;
 
 import java.io.InputStreamReader;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.HashMap;
-import java.util.Arrays;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 
 public class TokenDict implements CipherDict {
 
-  private final HashMap<Object, LinkedHashSet<String>> index;
+  private final Map<Integer, Set<String>> index;
   private int size = 0;
   private final Set<Character> alphabet;
   // each knownCharacter will have an associated negative value used to tokenize it;
-  private final HashMap<Character, Byte> knownCharacters;
+  private final Map<Character, Byte> knownCharacters;
 
-  TokenDict(Set<Character> alphabet, Set<Character> knownCharacters)
-          throws IOException {
+  TokenDict(Set<Character> alphabet, Set<Character> knownCharacters) throws IOException {
     if (!alphabet.containsAll(knownCharacters)) {
       throw new IllegalArgumentException("Alphabet must contain all knownCharacters");
     }
     this.alphabet = alphabet;
-    this.knownCharacters = new LinkedHashMap<>();
+    this.knownCharacters = new HashMap<>();
     // each known char will be assigned a unique negative token
     byte knownCharToken = -1;
     for (Character c : knownCharacters) {
       this.knownCharacters.put(c, knownCharToken--);
     }
-    this.index = new LinkedHashMap<>();
+    this.index = new HashMap<>();
     // read in the dictionary to a hash map with keys
     // based on a tokenized representation of the word
     BufferedReader dictReader = new BufferedReader(
@@ -50,16 +48,27 @@ public class TokenDict implements CipherDict {
           continue wordLoop;
         }
       }
-      this.add(cipherDictKey(word), word);
+      this.add(word);
       size++;
     }
+  }
 
+  // get the set that matches the key, add the word to it
+  private void add (String word) {
+    Integer key = cipherDictKey(word);
+    Set<String> matchingSet = index.get(key);
+    // if there are no results yet for this key we add a new set to hold them
+    if (matchingSet == null) {
+      matchingSet = new HashSet<>();
+      index.put(key, matchingSet);
+    }
+    matchingSet.add(word);
   }
 
   @Override
   public String toString() {
     int maxSize = 0;
-    for (Map.Entry<Object, LinkedHashSet<String>> results  : index.entrySet()) {
+    for (Map.Entry<Integer, Set<String>> results  : index.entrySet()) {
       int size = results.getValue().size();
       if (size > maxSize) {
         maxSize = size;
@@ -79,40 +88,45 @@ public class TokenDict implements CipherDict {
     return index.get(cipherDictKey(scrambledWord)).size();
   }
 
-  // get the list that matches the key, add the word to it
-  private void add (Object key, String word) {
-    LinkedHashSet<String> resultSet = index.get(key);
-    // if there are no results yet for this key we add a new set to hold them
-    if (resultSet == null) {
-      resultSet = new LinkedHashSet<>();
-      index.put(key, resultSet);
-    }
-    resultSet.add(word);
-  }
-
   @Override
   public Set<String> potentialMatches (Cipher cipher, String scrambledWord) {
     return index.get(cipherDictKey(scrambledWord));
   }
 
-  private int cipherDictKey(String word) {
-    if (word.length() == 0) {
-      throw new RuntimeException("Can't tokenize a null or empty word");
+  /**
+   * The secret to this dictionary is the way that we partition it using a tokenized representation of the word.
+   * We'll use a byte array of the same length as the word where the value in each position is the ordering
+   * in which we first observed that character in the word. For example:
+   *    original    scrambled     key
+   *    cat     ->    wer    ->   [0][1][2]
+   *    cat     ->    jui    ->   [0][1][2]
+   *    all     ->    rtt    ->   [0][1][1]
+   *    ally    ->    wllk   ->   [0][1][1][2]
+   *    bob     ->    jxj    ->   [0][1][0]
+   * The exception is for characters like ' and - that occur within words but don't get scrambled.
+   * We assign them negative values instead:
+   *    won't   ->   jkl'g   ->   [0][1][2][-1][3]
+   * We can't use this byte array as the key directly because byte[] uses object identity for hashCode and equals.
+   * Instead we'll generate the key explicitly with Arrays.hashCode() and store it in an Integer.
+   */
+  private Integer cipherDictKey(String scrambledWord) {
+    if (scrambledWord == null || scrambledWord.length() == 0) {
+      throw new IllegalArgumentException("Can't tokenize a null or empty word");
     }
-    byte[] tokenized = new byte[word.length()];
-    HashMap<Character, Byte> charToByte = new HashMap<>();
+    byte[] tokenized = new byte[scrambledWord.length()];
+    Map<Character, Byte> charToByte = new HashMap<>();
     // number of unique characters encountered so far
     byte nChars = 0;
     // tokenize the characters in the string
-    for (int i = 0; i < word.length(); i++) {
-      Character c = word.charAt(i);
+    for (int i = 0; i < scrambledWord.length(); i++) {
+      Character c = scrambledWord.charAt(i);
       // all characters must be in our alphabet;
       if (!alphabet.contains(c)) {
         throw new IllegalArgumentException(
-                String.format("Word %s has non-alphabet character %c", word, c)
+                String.format("Word %s has non-alphabet character %c", scrambledWord, c)
         );
       }
-      // we will use negative values for known characters
+      // we will use negative values for known characters like ' and -
       Byte knownCharToken = knownCharacters.get(c);
       if (knownCharToken != null) {
         tokenized[i] = knownCharToken;
@@ -126,30 +140,34 @@ public class TokenDict implements CipherDict {
         }
         // if this is a new character we give it the next token
         else {
-          tokenized[i] = ++nChars;
+          tokenized[i] = nChars++;
         }
       }
     }
-    // return a hashCode based on the array elements (and positions)
+    // explicitly create the hashCode based on the array elements and positions
     return Arrays.hashCode(tokenized);
   }
 
+  /**
+   * This implementation picks a random hashCode and then a random word with that hashCode. As a result, it
+   * disproportionately picks "unique-looking" words.
+   */
   @Override
   public String randomWord() {
-    Collection<LinkedHashSet<String>> dictSets = index.values();
-    int num = (int) (Math.random() * dictSets.size());
-    Set<String> randomSet = null;
-    for (Set<String> list: dictSets) {
+    Collection<Set<String>> dictSubsets = index.values();
+    int num = (int) (Math.random() * dictSubsets.size());
+    Collection<String> randomSubset = null;
+    for (Collection<String> subset : dictSubsets) {
       if (--num < 0) {
-        randomSet = list;
+        randomSubset = subset;
         break;
       }
     }
-    if (randomSet == null) {
+    if (randomSubset == null) {
       throw new RuntimeException("Couldn't find a random word");
     }
-    num = (int) (Math.random() * randomSet.size());
-    for (String randomWord: randomSet) {
+    num = (int) (Math.random() * randomSubset.size());
+    for (String randomWord: randomSubset) {
       if (--num < 0) return randomWord;
     }
     throw new RuntimeException("Couldn't find a random word");

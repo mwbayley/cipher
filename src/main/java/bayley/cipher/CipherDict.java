@@ -13,20 +13,20 @@ public interface CipherDict {
 
   /**
    * How many matches would we get if we didn't know any mappings yet?
-   * We'll use this to determine what order to examine words in
+   * We'll use this to determine what order to examine words in.
    */
   int nSimilarWords (String scrambledWord);
 
   /**
-   * Here we guarantee that all potential matches will be retrieved
-   * NO GUARANTEE that all of these match the cipher
-   * should be an efficient lookup here
+   * Here we guarantee that all potential matches will be retrieved but there is NO GUARANTEE that all of
+   * these match the cipher. We include the cipher as an argument in case the dictionary has a heuristic for
+   * subsetting results. Should be an efficient lookup here.
    */
   Set<String> potentialMatches(Cipher cipher, String scrambledWord);
 
   /**
-   * Get a "random" word from the dictionary
-   * Will be used for testing only - no mathematical robustness required
+   * Get a "random" word from the dictionary.
+   * Will be used for testing only - no mathematical robustness required.
    *
    * @return a (not really) random word from the dictionary
    */

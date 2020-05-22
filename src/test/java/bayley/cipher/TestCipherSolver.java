@@ -1,7 +1,7 @@
 package bayley.cipher;
 
 import java.io.IOException;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
@@ -17,16 +17,14 @@ public class TestCipherSolver {
 
   @Test
   public void testRefine() throws IOException {
-    String solution = "HALLOWEEN";
+    String unscrambled = "HALLOWEEN";
     CipherSolver solver = new CipherSolver();
     Cipher encodingCipher = Cipher.randomCipher(solver.alphabet, solver.knownCharacters);
-    String scrambled = encodingCipher.encode(solution);
+    String scrambled = encodingCipher.encode(unscrambled);
     Cipher emptyCipher = new Cipher(solver.alphabet, solver.knownCharacters);
     Set<Cipher> ciphers = solver.refine(emptyCipher, scrambled);
-    Set<String> solutions = new LinkedHashSet<>();
-    for (Cipher c : ciphers) {
-      solutions.add(c.decode(scrambled));
-    }
+    Set<String> solutions = new HashSet<>();
+    ciphers.forEach(c -> solutions.add(c.decode(scrambled)));
     Set<String> expected = ImmutableSet.of(
             "HALLOWEEN",
             "BUCCANEER",
@@ -49,7 +47,7 @@ public class TestCipherSolver {
   }
 
   // This test will timeout unless the input is reordered to consider the longer, distinctive word first
-  @Test(timeout=20*SECOND)
+  @Test(timeout=30*SECOND)
   public void testReorderCipherSolver() throws IOException {
     CipherSolver solver = new CipherSolver();
     Cipher c = randomCipher(solver.alphabet, solver.knownCharacters);
@@ -61,7 +59,7 @@ public class TestCipherSolver {
   }
 
   // This is a pathological example with many short, indistinct words. This causes the solution space to explode.
-  /*@Test(timeout=20*SECOND)
+  /*@Test(timeout=30*SECOND)*/
   public void testImpossibleCipherSolver() throws IOException {
     CipherSolver solver = new CipherSolver();
     Cipher c = randomCipher(solver.alphabet, solver.knownCharacters);
@@ -70,5 +68,5 @@ public class TestCipherSolver {
     String scrambled = c.encode(sentence);
     Set<String> solutions = solver.solve(scrambled, true);
     Assert.assertTrue(solutions.contains(sentence.toUpperCase()));
-  }*/
+  }
 }
